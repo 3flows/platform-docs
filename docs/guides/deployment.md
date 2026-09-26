@@ -12,7 +12,7 @@ https:
   - name: api
     port: 3000
     services:
-      - OrdersService
+      - name: OrdersService
 
 mqs:
   - name: DEFAULT
@@ -40,7 +40,7 @@ A typical distributed setup has:
 - Use coordinators for singleton timers and polling workloads.
 - Use idempotency for asynchronous triggers such as MQ, email, SMS, and webhooks.
 - Prefer durable/shared idempotency and coordination backends when available.
-- Keep the platform repo tests as the implementation source of truth and docs as the released behavior guide.
+
 
 ## Public docs deployment
 

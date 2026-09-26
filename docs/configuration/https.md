@@ -7,7 +7,7 @@ https:
   - name: api
     port: 3000
     services:
-      - OrdersService
+      - name: OrdersService
 ```
 
 ## Fields

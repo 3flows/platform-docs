@@ -14,7 +14,7 @@ registries: []
 discovery: {}
 coordinators: []
 idempotencies: []
-remotes: {}
+remotes: []
 runtime: {}
 ```
 

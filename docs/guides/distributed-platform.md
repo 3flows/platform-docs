@@ -11,7 +11,7 @@ services:
 ```
 
 ```ts
-await this.service('PaymentsService').call('charge', params);
+await trigger.context.service('PaymentsService').method('charge').input(params).call();
 ```
 
 The call resolves locally.
@@ -40,7 +40,7 @@ https:
   - name: api
     port: 10151
     services:
-      - PaymentsService
+      - name: PaymentsService
 
 registries:
   - name: DEFAULT
@@ -81,7 +81,7 @@ discovery:
 `OrdersService` still calls:
 
 ```ts
-await this.service('PaymentsService').call('charge', params);
+await trigger.context.service('PaymentsService').method('charge').input(params).call();
 ```
 
 The platform decides whether the target is local, statically remote, or discovered.

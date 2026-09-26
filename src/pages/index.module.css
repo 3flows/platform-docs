@@ -1,222 +1,61 @@
-/* ── Hero: navy band with a single soft cyan glow ── */
-.hero {
-  position: relative;
-  overflow: hidden;
-  background: #091827;
-  color: #ffffff;
-  padding: 112px 0 120px;
-  border-bottom: 1px solid rgba(130, 148, 166, 0.22);
+.heroBanner {
+  padding: 5rem 0;
+  text-align: center;
 }
 
-.glow {
-  position: absolute;
-  right: -180px;
-  bottom: -220px;
-  width: 640px;
-  height: 640px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(66, 204, 255, 0.28), rgba(66, 204, 255, 0) 70%);
-  pointer-events: none;
-}
-
-.heroInner {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 20px;
-}
-
-.heroLogo {
-  height: 36px;
-  width: auto;
-  margin-bottom: 28px;
-}
-
-.accentBar {
-  width: 72px;
-  height: 6px;
-  background: #42ccff;
-}
-
-.accentBarSmall {
-  width: 40px;
-  height: 4px;
-  background: #42ccff;
-}
-
-.eyebrow {
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #8294a6;
-}
-
-.heroTitle {
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(36px, 5vw, 60px);
-  font-weight: 900;
-  line-height: 1.02;
-  letter-spacing: -0.02em;
-  max-width: 820px;
-}
-
-.highlight {
-  color: #42ccff;
-}
-
-.heroSubtitle {
-  margin: 0;
-  max-width: 600px;
-  font-size: 18px;
-  line-height: 1.5;
-  color: #eaeaea;
-  text-wrap: pretty;
-}
-
-/* ── Pill buttons ── */
 .buttons {
   display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
   flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 12px;
+  margin-top: 1.5rem;
 }
 
-.btn {
-  height: 48px;
-  padding: 0 24px;
+.section {
+  padding: 4rem 0;
+}
+
+.alt {
+  background: var(--ifm-color-emphasis-100);
+}
+
+.center {
+  text-align: center;
+}
+
+.journey {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.journeyItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: 999px;
+  color: var(--ifm-font-color-base);
+}
+
+.journeyItem:hover {
+  text-decoration: none;
+  border-color: var(--ifm-color-primary);
+}
+
+.journeyStep {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  font-weight: 800;
-  font-size: 15px;
-  text-decoration: none !important;
-  transition: background 0.15s, transform 0.1s;
-}
-
-.btn:active {
-  transform: scale(0.98);
-}
-
-.btnPrimary {
-  background: #42ccff;
-  color: #091827;
-}
-
-.btnPrimary:hover {
-  background: #1fa6d8;
-  color: #091827;
-}
-
-.btnGhost {
-  border: 1px solid rgba(130, 148, 166, 0.45);
-  color: #ffffff;
-}
-
-.btnGhost:hover {
-  background: rgba(130, 148, 166, 0.16);
-  color: #ffffff;
-}
-
-.arrow {
-  width: 18px;
-  height: 18px;
-  flex: none;
-}
-
-/* ── Feature section ── */
-.main {
-  background: var(--c-bg);
-  padding: 72px 0 96px;
-}
-
-.sectionHead {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 32px;
-}
-
-.sectionTitle {
-  margin: 0;
-  font-size: clamp(24px, 3vw, 32px);
-  font-weight: 900;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-}
-
-.sectionText {
-  margin: 0;
-  max-width: 640px;
-  color: var(--c-muted);
-}
-
-.card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 24px;
-  margin-bottom: 24px;
-  background: var(--c-surface);
-  border: 1px solid var(--c-border);
-  border-radius: 8px;
-  color: var(--c-body);
-  text-decoration: none !important;
-  transition: border-color 0.15s, box-shadow 0.15s;
-}
-
-.card:hover {
-  color: var(--c-body);
-  border-color: #42ccff;
-  box-shadow: 0 6px 20px rgba(9, 24, 39, 0.12);
-}
-
-.cardEyebrow {
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--c-muted);
-}
-
-.cardTitle {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  color: var(--c-text);
-}
-
-.cardText {
-  margin: 0;
-  flex: 1;
-  color: var(--c-body);
-}
-
-.cardMore {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 800;
-  font-size: 14px;
-  color: var(--c-text);
-}
-
-.cardMore .arrow {
-  width: 16px;
-  height: 16px;
-  color: #42ccff;
-}
-
-@media (max-width: 996px) {
-  .hero {
-    padding: 64px 0 72px;
-  }
-  .main {
-    padding: 48px 0 64px;
-  }
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: var(--ifm-color-primary);
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 700;
 }

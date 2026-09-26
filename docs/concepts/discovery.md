@@ -45,5 +45,5 @@ discovery:
 The code does not care whether the service is local or remote.
 
 ```ts
-await this.service('PaymentsService').call('charge', { amount: 100 });
+await trigger.context.service('PaymentsService').method('charge').input({ amount: 100 }).call();
 ```

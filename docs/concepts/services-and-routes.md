@@ -1,58 +1,58 @@
 # Services and routes
 
-Services contain application behavior. Routes expose that behavior to triggers such as HTTP requests, MQ messages, timers, email, SMS, and webhooks.
+Services contain application behavior. Handlers and routes connect that behavior to triggers such as HTTP requests, JSON-RPC calls, queue messages, timers, email, SMS and webhooks.
 
 ## Service registration
 
 ```ts
 @Register()
-class OrdersService extends Service {}
+class AppointmentsService extends Service {}
 ```
 
-Then enable it in YAML:
+Enable it in YAML:
 
 ```yaml
 services:
-  - name: OrdersService
+  - name: AppointmentsService
+```
+
+## Handlers
+
+Handlers are named functions with input and output schemas. They're exposed over HTTP (`POST /<name>`), over JSON-RPC (`POST /.jsonrpc`), and to other services through `service(name).method(...)`.
+
+```ts
+handlers = () => [
+    handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
+        await trigger.ok({ id: randomUUID(), ...input });
+    })
+];
 ```
 
 ## Routes
 
-A service defines routes by overriding `routes()`.
+Routes connect other trigger types. Override `routes()`:
 
 ```ts
 routes(): Route {
-  const route = super.routes();
+    const route = super.routes();
 
-  route.http().post('/orders').do(this.createOrder);
-  route.mq().queue('orders.created').do(this.handleOrderCreated);
-  route.timer('cleanup').do(this.cleanup);
+    route.http().get('/appointments/:id').do(async (params, trigger) => { /* ... */ });
+    route.mq().queue('appointment-booked').do(async (message, trigger) => { /* ... */ });
+    route.timer('reminders').do(async (_params, trigger) => { /* ... */ });
+    route.sms().anyFrom().to('+15550000001').do(async (sms, trigger) => { /* ... */ });
 
-  return route;
+    return route;
 }
 ```
 
 ## Trigger context
 
-Route handlers receive a `Trigger` object. The trigger exposes context for the route source.
+Every handler and route receives a `Trigger`. Use `trigger.context` to reach infrastructure and other services:
 
 ```ts
-route.mq().queue('orders.created').do(async (params, trigger) => {
-  const message = trigger.context.mqContext?.message;
-  return trigger.ok();
-});
+const { doc, kv, blob, mq, sms, email, log, service } = trigger.context;
 ```
 
-## Service context
+Using the trigger context, rather than `this` or global lookups, keeps handlers independent of the service instance and easy to test.
 
-Services can access configured infrastructure through context helpers:
-
-```ts
-this.kv()
-this.mq()
-this.email()
-this.sms()
-this.timer()
-this.service('OtherService')
-this.services()
-```
+Source-specific data is also available, for example `trigger.context.mqContext?.message` for queue routes.

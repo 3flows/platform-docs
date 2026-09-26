@@ -1,58 +1,90 @@
 import clsx from 'clsx';
 import Heading from '@theme/Heading';
 import Layout from '@theme/Layout';
+import CodeBlock from '@theme/CodeBlock';
 import Link from '@docusaurus/Link';
 import styles from './index.module.css';
 
-const features = [
+const serviceCode = `@Register()
+export class AppointmentsService extends Service {
+    handlers = () => [
+        handler('bookAppointment', BookAppointment, Appointment,
+            async (input, trigger) => {
+                const { doc, sms } = trigger.context;
+                const appointment = { id: randomUUID(), ...input };
+
+                await doc().collection('appointments')
+                    .by(appointment.id).set(appointment);
+
+                await sms().to(appointment.phone)
+                    .body('Your appointment is confirmed.').send();
+
+                await trigger.ok(appointment);
+            })
+    ];
+}`;
+
+const yamlCode = `services:
+  - name: AppointmentsService
+
+https:
+  - name: api
+    port: 3000
+    services:
+      - name: AppointmentsService
+
+docs:
+  - name: DEFAULT
+    type: memory   # mongo, postgres
+
+smss:
+  - name: DEFAULT
+    type: memory   # twilio`;
+
+const points = [
   {
-    eyebrow: 'Configuration',
-    title: 'YAML-driven platform',
-    description: 'Configure services, HTTP, MQ, timers, registries, coordinators, idempotency stores, and discovery from one platform file.',
-    to: '/docs/configuration/overview'
+    title: 'Encoded experience',
+    description:
+      'docs, kv, blobs, mq, sms and timers backed by implementations that have already gone the full road to production with our customers.'
   },
   {
-    eyebrow: 'Topology',
-    title: 'Local or distributed',
-    description: 'Keep service code stable while calls resolve locally, through static remotes, or through registry-backed discovery.',
-    to: '/docs/guides/distributed-platform'
+    title: 'A shared language',
+    description:
+      'Agents write the code. Humans read it, review it and take responsibility for it, in the same small vocabulary.'
   },
   {
-    eyebrow: 'Reliability',
-    title: 'Safer async triggers',
-    description: 'Use coordinator-backed singleton timers and default idempotency for MQ, email, and SMS triggers.',
-    to: '/docs/guides/singleton-timers'
+    title: 'Portable by configuration',
+    description:
+      'Memory in development, MongoDB, Redis or Twilio in production. Even one process or several. The code stays the same.'
   }
 ];
 
-function Arrow() {
-  return (
-    <svg className={styles.arrow} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </svg>
-  );
-}
+const journey = [
+  { step: '0', label: 'Hello World', to: '/docs/tutorial/hello-world' },
+  { step: '2', label: 'Store data', to: '/docs/tutorial/store-appointments' },
+  { step: '3', label: 'Send SMS', to: '/docs/tutorial/confirm-by-sms' },
+  { step: '4', label: 'Timers', to: '/docs/tutorial/send-reminders' },
+  { step: '6', label: 'Queues', to: '/docs/tutorial/dont-block-booking' },
+  { step: '7', label: 'Two services', to: '/docs/tutorial/notifications-service' },
+  { step: '8', label: 'Two processes', to: '/docs/tutorial/separate-processes' }
+];
 
-function HomepageHeader() {
+function Hero() {
   return (
-    <header className={styles.hero}>
-      <div className={styles.glow} aria-hidden="true" />
-      <div className={clsx('container', styles.heroInner)}>
-        <div className={styles.accentBar} />
-        <div className={styles.eyebrow}>Platform documentation</div>
-        <Heading as="h1" className={styles.heroTitle}>
-          Services that <span className={styles.highlight}>flow together.</span>
+    <header className={clsx('hero hero--primary', styles.heroBanner)}>
+      <div className="container">
+        <Heading as="h1" className="hero__title">
+          Simple primitives your team can read, review and own.
         </Heading>
-        <p className={styles.heroSubtitle}>
-          Build TypeScript services that run as one process or as a distributed platform — configured from a single YAML file.
+        <p className="hero__subtitle">
+          Write business logic once with a few platform primitives. Decide in YAML how it runs.
         </p>
         <div className={styles.buttons}>
-          <Link className={clsx(styles.btn, styles.btnPrimary)} to="/docs/getting-started">
-            Get started <Arrow />
+          <Link className="button button--secondary button--lg" to="/docs/tutorial">
+            Start the tutorial
           </Link>
-          <Link className={clsx(styles.btn, styles.btnGhost)} to="/docs/guides/distributed-platform">
-            Distributed guide
+          <Link className="button button--outline button--secondary button--lg" to="/docs/why">
+            Why 3flows Platform
           </Link>
         </div>
       </div>
@@ -60,32 +92,60 @@ function HomepageHeader() {
   );
 }
 
-function Feature({ eyebrow, title, description, to }) {
-  return (
-    <div className="col col--4">
-      <Link to={to} className={styles.card}>
-        <div className={styles.cardEyebrow}>{eyebrow}</div>
-        <Heading as="h3" className={styles.cardTitle}>{title}</Heading>
-        <p className={styles.cardText}>{description}</p>
-        <span className={styles.cardMore}>Read more <Arrow /></span>
-      </Link>
-    </div>
-  );
-}
-
 export default function Home() {
   return (
-    <Layout title="3flows Platform" description="Documentation for the 3flows Platform">
-      <HomepageHeader />
-      <main className={styles.main}>
-        <section className="container">
-          <div className={styles.sectionHead}>
-            <div className={styles.accentBarSmall} />
-            <Heading as="h2" className={styles.sectionTitle}>What the platform gives you</Heading>
-            <p className={styles.sectionText}>One runtime, many topologies. Connect services, triggers and infrastructure without rewriting your code.</p>
+    <Layout title="3flows Platform" description="Simple primitives your team can read, review and own.">
+      <Hero />
+      <main>
+        <section className={styles.section}>
+          <div className="container">
+            <Heading as="h2" className={styles.center}>This is a complete service</Heading>
+            <p className={styles.center}>
+              Book an appointment, store it and confirm it by SMS, with no database driver or SMS SDK in sight.
+            </p>
+            <div className="row">
+              <div className="col col--7">
+                <CodeBlock language="ts" title="appointments.ts">{serviceCode}</CodeBlock>
+              </div>
+              <div className="col col--5">
+                <CodeBlock language="yaml" title="platform.yml">{yamlCode}</CodeBlock>
+              </div>
+            </div>
           </div>
-          <div className="row">
-            {features.map((props) => <Feature key={props.title} {...props} />)}
+        </section>
+
+        <section className={clsx(styles.section, styles.alt)}>
+          <div className="container">
+            <div className="row">
+              {points.map(({ title, description }) => (
+                <div key={title} className="col col--4">
+                  <Heading as="h3">{title}</Heading>
+                  <p>{description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className={styles.section}>
+          <div className="container">
+            <Heading as="h2" className={styles.center}>From Hello World to two processes</Heading>
+            <p className={styles.center}>
+              One small app, one new concept per chapter. From chapter 7 on, only the YAML changes.
+            </p>
+            <div className={styles.journey}>
+              {journey.map(({ step, label, to }) => (
+                <Link key={step} to={to} className={styles.journeyItem}>
+                  <span className={styles.journeyStep}>{step}</span>
+                  <span>{label}</span>
+                </Link>
+              ))}
+            </div>
+            <div className={styles.buttons}>
+              <Link className="button button--primary button--lg" to="/docs/tutorial">
+                Start the tutorial
+              </Link>
+            </div>
           </div>
         </section>
       </main>

@@ -2,7 +2,7 @@
 
 const config = {
   title: '3flows Platform',
-  tagline: 'YAML-driven services, triggers, and distributed infrastructure for TypeScript applications.',
+  tagline: 'Simple primitives your team can read, review and own.',
   favicon: 'img/3flows-mark-3f.png',
 
   url: 'https://3flows.github.io',
@@ -55,8 +55,10 @@ const config = {
         srcDark: 'img/3flows-wordmark-white.png'
       },
       items: [
+        { to: '/docs/tutorial', label: 'Tutorial', position: 'left' },
+        { to: '/docs/why', label: 'Why', position: 'left' },
         { type: 'docSidebar', sidebarId: 'platformSidebar', position: 'left', label: 'Docs' },
-        { to: '/docs/getting-started', label: 'Getting Started', position: 'left' },
+        { href: 'https://github.com/3flows/platform-samples', label: 'Samples', position: 'right' },
         { href: 'https://github.com/3flows/platform', label: 'GitHub', position: 'right' }
       ]
     },
@@ -66,14 +68,17 @@ const config = {
         {
           title: 'Docs',
           items: [
-            { label: 'Getting Started', to: '/docs/getting-started' },
-            { label: 'Configuration', to: '/docs/configuration/overview' },
-            { label: 'Distributed Platform', to: '/docs/guides/distributed-platform' }
+            { label: 'Tutorial', to: '/docs/tutorial' },
+            { label: 'Why 3flows Platform', to: '/docs/why' },
+            { label: 'Configuration', to: '/docs/configuration/overview' }
           ]
         },
         {
           title: 'Community',
-          items: [{ label: 'GitHub', href: 'https://github.com/3flows/platform' }]
+          items: [
+            { label: 'Samples', href: 'https://github.com/3flows/platform-samples' },
+            { label: 'GitHub', href: 'https://github.com/3flows/platform' }
+          ]
         }
       ],
       copyright: `© ${new Date().getFullYear()} 3flows GmbH · We build bridges.`
