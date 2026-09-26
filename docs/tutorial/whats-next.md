@@ -11,6 +11,8 @@ You built an appointment reminder app with:
 - SMS confirmations and reminders
 - a timer and a message queue
 - two processes, with no code changes needed to split them
+- built-in health, metrics and API descriptions
+- entities, an ontology, a generated GraphQL API and an admin API
 
 And every piece used a handful of primitives that both humans and agents can read.
 
@@ -29,4 +31,5 @@ Until then, the [guides](../guides/distributed-platform.md) already describe the
 
 - [Why 3flows Platform](../why.md)
 - [Core concepts](../concepts/platform-runtime.md)
+- [Entities, ontologies and GraphQL](../concepts/domain-model.md)
 - [Configuration reference](../configuration/overview.md)

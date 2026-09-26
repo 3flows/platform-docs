@@ -106,4 +106,4 @@ curl -X POST localhost:3001/.jsonrpc -H 'Content-Type: application/json' \
 
 This is the smallest possible review for a significant architectural change.
 
-[Sample: step 08](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/08-separate-processes) · Next: [What's next](./whats-next.md)
+[Sample: step 08](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/08-separate-processes) · Next: [Part 2: Operate it](./operate-it.md)

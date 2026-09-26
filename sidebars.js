@@ -17,6 +17,11 @@ const sidebars = {
         'tutorial/dont-block-booking',
         'tutorial/notifications-service',
         'tutorial/separate-processes',
+        'tutorial/operate-it',
+        'tutorial/entities',
+        'tutorial/ontology',
+        'tutorial/graphql',
+        'tutorial/admin-api',
         'tutorial/whats-next'
       ]
     },
@@ -28,6 +33,7 @@ const sidebars = {
       items: [
         'concepts/platform-runtime',
         'concepts/services-and-routes',
+        'concepts/domain-model',
         'concepts/discovery',
         'concepts/ownership',
         'concepts/idempotency'
@@ -55,6 +61,9 @@ const sidebars = {
         'configuration/overview',
         'configuration/services',
         'configuration/https',
+        'configuration/entities',
+        'configuration/graphqls',
+        'configuration/admins',
         'configuration/mqs',
         'configuration/timers',
         'configuration/registries-discovery',
