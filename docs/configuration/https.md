@@ -45,7 +45,7 @@ For every service in `services`:
 | `metrics` | `/metrics` | Prometheus metrics |
 | `openapi.json` | `/openapi.json` | OpenAPI 3.1, generated from handler schemas |
 | `openapi.yml` | `/openapi.yml` | The same as YAML |
-| `version` | disabled | Service version |
+| `version` | disabled | Version from the application's `package.json` |
 
 Listing `wellknown` **replaces** the defaults:
 

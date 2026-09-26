@@ -28,6 +28,7 @@ curl localhost:3000/ping
 ```json
 {
   "name": "appointment-reminders",
+  "version": "0.1.0",
   "status": "OK",
   "pings": [
     {
@@ -46,6 +47,8 @@ curl localhost:3000/ping
 curl -X POST localhost:3000/.jsonrpc -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"rpc.schema"}'
 ```
+
+The reported `version` comes from your application's `package.json`. It appears in `/ping`, in the OpenAPI description and in the GraphQL `version` field. Without an application `package.json`, the platform's own version is used.
 
 ## Adapting the endpoints
 

@@ -13,13 +13,15 @@ title: 12. GraphQL
 YAML only:
 
 ```diff title="platform.yml"
-+# GraphQL on the same HTTP server, generated from the ontology.
++# GraphQL on the same HTTP server: generated from the ontology, plus the service handlers.
 +graphqls:
 +  - name: graphql
 +    useHttp: api
 +    path: /graphql
 +    ontologies:
 +      - AppointmentsOntology
++    services:
++      - name: AppointmentsService
 ```
 
 That's a complete GraphQL API, including the relationship in both directions:
@@ -66,19 +68,15 @@ Input validation uses the same entity schemas. Invalid mutations are rejected.
 
 ## Your own handlers in GraphQL
 
-Service handlers can be added to the schema, too:
+`services` adds the handlers of `AppointmentsService` to the same schema. Each handler becomes a GraphQL field, with arguments and result type inferred from its schemas:
 
-```yaml
-graphqls:
-  - name: graphql
-    useHttp: api
-    ontologies:
-      - AppointmentsOntology
-    services:
-      - name: AppointmentsService
+```graphql
+{
+  listAppointments { id name phone at }
+}
 ```
 
-Each handler becomes a GraphQL field, with its arguments and result type inferred from its schemas. Handlers with an empty input object aren't supported yet. Use `t.void()` or at least one field.
+Handlers without parameters, like `listAppointments`, become fields without arguments. Inputs with fields are passed as a single `parameter` argument.
 
 GraphQL can also run on its own port (`port` instead of `useHttp`), with `playground`, `introspection` and `auth` options. See the [GraphQL reference](../configuration/graphqls.md).
 
@@ -89,7 +87,7 @@ GraphQL can also run on its own port (`port` instead of `useHttp`), with `playgr
 
 ## Reviewer's view
 
-> No code changes. A generated GraphQL endpoint at `/graphql` for the `AppointmentsOntology`.
+> No code changes. A generated GraphQL endpoint at `/graphql` for the `AppointmentsOntology` and the handlers of `AppointmentsService`.
 
 The review question is about exposure, not implementation: *should these entities be readable and writable through GraphQL, and by whom?* That's where `auth` comes in.
 
