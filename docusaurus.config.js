@@ -3,7 +3,7 @@
 const config = {
   title: '3flows Platform',
   tagline: 'YAML-driven services, triggers, and distributed infrastructure for TypeScript applications.',
-  favicon: 'img/logo.svg',
+  favicon: 'img/3flows-mark-3f.png',
 
   url: 'https://3flows.github.io',
   baseUrl: '/platform-docs/',
@@ -42,12 +42,17 @@ const config = {
   ],
 
   themeConfig: {
-    image: 'img/logo.svg',
+    image: 'img/3flows-wordmark-blue.png',
+    colorMode: {
+      defaultMode: 'light',
+      respectPrefersColorScheme: true
+    },
     navbar: {
-      title: '3flows Platform',
+      title: 'Platform',
       logo: {
-        alt: '3flows Platform',
-        src: 'img/logo.svg'
+        alt: '3flows',
+        src: 'img/3flows-wordmark-blue.png',
+        srcDark: 'img/3flows-wordmark-white.png'
       },
       items: [
         { type: 'docSidebar', sidebarId: 'platformSidebar', position: 'left', label: 'Docs' },
@@ -71,9 +76,11 @@ const config = {
           items: [{ label: 'GitHub', href: 'https://github.com/3flows/platform' }]
         }
       ],
-      copyright: `Copyright © ${new Date().getFullYear()} 3flows.`
+      copyright: `© ${new Date().getFullYear()} 3flows GmbH · We build bridges.`
     },
     prism: {
+      theme: require('prism-react-renderer').themes.github,
+      darkTheme: require('prism-react-renderer').themes.oceanicNext,
       additionalLanguages: ['bash', 'typescript', 'yaml', 'json']
     }
   }
