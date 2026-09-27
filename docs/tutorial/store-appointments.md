@@ -10,29 +10,30 @@ title: 2. Store appointments
 
 ## The solution: `docs`
 
-Appointments are documents, so we use the `docs` primitive.
+Appointments are documents, so we use the `docs` primitive. The `appointments` array goes away. Both handlers use `docs` instead:
 
-```diff title="services.ts"
- handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
-     const appointment: Appointment = { id: randomUUID(), ...input };
--    this.appointments.push(appointment);
-+    await trigger.context.doc().collection('appointments').by(appointment.id).set(appointment);
-     await trigger.ok(appointment);
- }),
+```ts title="services.ts"
+handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
+    const appointment: Appointment = { id: randomUUID(), ...input };
+    // highlight-next-line
+    await trigger.context.doc().collection('appointments').by(appointment.id).set(appointment);
+    await trigger.ok(appointment);
+}),
 
- handler('listAppointments', t.object({}).optional(), t.array(Appointment), async (_input, trigger) => {
--    await trigger.ok(this.appointments);
-+    const appointments = await trigger.context.doc().collection('appointments').find({}).all<Appointment>();
-+    await trigger.ok(appointments);
- })
+handler('listAppointments', t.object({}).optional(), t.array(Appointment), async (_input, trigger) => {
+    // highlight-start
+    const appointments = await trigger.context.doc().collection('appointments').find({}).all<Appointment>();
+    await trigger.ok(appointments);
+    // highlight-end
+})
 ```
 
 Then tell the platform that this application needs a document store:
 
-```diff title="platform.yml"
-+docs:
-+  - name: DEFAULT
-+    type: memory
+```yaml title="platform.yml"
+docs:
+  - name: DEFAULT
+    type: memory
 ```
 
 ## Swap the database without touching code

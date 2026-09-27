@@ -10,24 +10,22 @@ title: 6. Don't block booking
 
 ## The solution: `mq`
 
-Booking publishes an event and answers right away. A queue route sends the SMS.
+Booking publishes an event and answers right away. The SMS call moves out of the handler into a queue route.
 
-```diff title="services.ts"
- handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
--    const { doc, sms } = trigger.context;
-+    const { doc, mq } = trigger.context;
-     const appointment: Appointment = { id: randomUUID(), ...input };
+```ts title="services.ts"
+handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
+    // highlight-next-line
+    const { doc, mq } = trigger.context;
+    const appointment: Appointment = { id: randomUUID(), ...input };
 
-     await doc().collection('appointments').by(appointment.id).set(appointment);
--    await sms()
--        .to(appointment.phone)
--        .body(`Hi ${appointment.name}, your appointment on ${appointment.at} is confirmed.`)
--        .send();
-+    // Don't wait for the SMS provider: publish an event and answer right away.
-+    await mq().queue('appointment-booked').send(appointment);
+    await doc().collection('appointments').by(appointment.id).set(appointment);
+    // highlight-start
+    // Don't wait for the SMS provider: publish an event and answer right away.
+    await mq().queue('appointment-booked').send(appointment);
+    // highlight-end
 
-     await trigger.ok(appointment);
- }),
+    await trigger.ok(appointment);
+}),
 ```
 
 ```ts title="services.ts"
@@ -39,12 +37,12 @@ route.mq().queue('appointment-booked').do(async (appointment, trigger) => {
 });
 ```
 
-```diff title="platform.yml"
-+mqs:
-+  - name: DEFAULT
-+    type: memory
-+    use:
-+      - AppointmentsService
+```yaml title="platform.yml"
+mqs:
+  - name: DEFAULT
+    type: memory
+    use:
+      - AppointmentsService
 ```
 
 `use` attaches the service's queue routes to this message queue. In production, `type: rabbitmq` or `type: azure` (Service Bus) gives you a durable broker with retries. Same code.

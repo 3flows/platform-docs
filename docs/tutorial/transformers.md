@@ -122,9 +122,8 @@ export class DataExchangeService extends Service {
 services:
   - name: AppointmentsService
   - name: NotificationsService
-  # highlight-start
+  # highlight-next-line
   - name: DataExchangeService
-  # highlight-end
 
 https:
   - name: api

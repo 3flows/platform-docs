@@ -55,12 +55,12 @@ routes(): Route {
 
 The schedule lives in YAML:
 
-```diff title="platform.yml"
-+timers:
-+  - service: AppointmentsService
-+    name: reminders
-+    cron: '0 * * * * *' # every minute, so you can watch it locally
-+    runImmediatly: false
+```yaml title="platform.yml"
+timers:
+  - service: AppointmentsService
+    name: reminders
+    cron: '0 * * * * *' # every minute, so you can watch it locally
+    runImmediatly: false
 ```
 
 In production you'd probably run it hourly. That's a YAML change.

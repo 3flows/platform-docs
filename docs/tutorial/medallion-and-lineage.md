@@ -59,9 +59,8 @@ return this.pipeline('appointment-import')
     // highlight-end
     .onError('entity').deadLetter()
     .deadLetters().to.doc().db('datahub').collection('dead_letters')
-    // highlight-start
+    // highlight-next-line
     .lineage().to.doc().db('datahub').collection('lineage')
-    // highlight-end
     .save({ batchSize: 500 });
 ```
 

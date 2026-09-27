@@ -49,9 +49,8 @@ export class PracticeSyncPipeline extends Pipeline {
 ```yaml title="platform.yml"
 services:
   # …
-  # highlight-start
+  # highlight-next-line
   - name: PracticeSyncPipeline
-  # highlight-end
 
 https:
   - name: api

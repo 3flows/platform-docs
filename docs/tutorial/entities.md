@@ -70,18 +70,20 @@ handler('bookAppointment', BookAppointment, Appointment, async ({ name, phone, a
 
 The public API, meaning the handler schemas, stays the same. `NotificationsService` is untouched.
 
-```diff title="platform.yml"
- docs:
-   - name: DEFAULT
-     type: memory
-+
-+# Entities are stored in the DEFAULT docs store.
-+entities:
-+  backend: docs
-+  db: appointments
-+  entity:
-+    - name: Customer
-+    - name: Appointment
+```yaml title="platform.yml"
+docs:
+  - name: DEFAULT
+    type: memory
+# highlight-start
+
+# Entities are stored in the DEFAULT docs store.
+entities:
+  backend: docs
+  db: appointments
+  entity:
+    - name: Customer
+    - name: Appointment
+# highlight-end
 ```
 
 ## The entity API

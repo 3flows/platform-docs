@@ -54,23 +54,25 @@ The reported `version` comes from your application's `package.json`. It appears 
 
 Your cluster expects the liveness probe at `/healthz`, and metrics shouldn't be public. That's YAML:
 
-```diff title="platform.yml"
- https:
-   - name: api
-     port: 3000
-     services:
-       - name: AppointmentsService
-+    # Built-in endpoints. Listing them replaces the defaults.
-+    wellknown:
-+      - type: ping
-+        url: ping
-+      - type: health
-+        url: healthz # what the Kubernetes probes expect
-+      - type: openapi.json
-+        url: openapi.json
-+      - type: metrics
-+        url: metrics
-+        disabled: true # scraped through a separate, internal port in production
+```yaml title="platform.yml"
+https:
+  - name: api
+    port: 3000
+    services:
+      - name: AppointmentsService
+    # highlight-start
+    # Built-in endpoints. Listing them replaces the defaults.
+    wellknown:
+      - type: ping
+        url: ping
+      - type: health
+        url: healthz # what the Kubernetes probes expect
+      - type: openapi.json
+        url: openapi.json
+      - type: metrics
+        url: metrics
+        disabled: true # scraped through a separate, internal port in production
+    # highlight-end
 ```
 
 Other `https` options include `basepath`, CORS (`useCors`, `corsConfiguration`), request size limits (`security`), WebSockets (`ws`) and authentication (`auth`). See the [HTTP reference](../configuration/https.md).

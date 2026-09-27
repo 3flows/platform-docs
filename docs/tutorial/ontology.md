@@ -34,19 +34,18 @@ export const Appointments = ENTITIES['Appointment'];
 
 `o.one(Customer).inverse('appointments')` says: *an appointment has one customer, and a customer has many appointments.*
 
-**`appointments.ts` doesn't change at all.** The ontology registers the same entities.
+**`appointments.ts` doesn't change at all.** The ontology registers the same entities. In YAML, `ontologies` replaces the list of entities:
 
-```diff title="platform.yml"
--# Entities are stored in the DEFAULT docs store.
-+# Entities come from the ontology and are stored in the DEFAULT docs store.
- entities:
-   backend: docs
-   db: appointments
--  entity:
--    - name: Customer
--    - name: Appointment
-+  ontologies:
-+    - AppointmentsOntology
+```yaml title="platform.yml"
+# highlight-next-line
+# Entities come from the ontology and are stored in the DEFAULT docs store.
+entities:
+  backend: docs
+  db: appointments
+  # highlight-start
+  ontologies:
+    - AppointmentsOntology
+  # highlight-end
 ```
 
 ## Describe it

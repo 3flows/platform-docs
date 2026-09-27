@@ -12,16 +12,16 @@ title: 12. GraphQL
 
 YAML only:
 
-```diff title="platform.yml"
-+# GraphQL on the same HTTP server: generated from the ontology, plus the service handlers.
-+graphqls:
-+  - name: graphql
-+    useHttp: api
-+    path: /graphql
-+    ontologies:
-+      - AppointmentsOntology
-+    services:
-+      - name: AppointmentsService
+```yaml title="platform.yml"
+# GraphQL on the same HTTP server: generated from the ontology, plus the service handlers.
+graphqls:
+  - name: graphql
+    useHttp: api
+    path: /graphql
+    ontologies:
+      - AppointmentsOntology
+    services:
+      - name: AppointmentsService
 ```
 
 That's a complete GraphQL API, including the relationship in both directions:

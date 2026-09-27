@@ -77,9 +77,8 @@ mqs:
     type: memory
     use:
       - NotificationsService
-      # highlight-start
+      # highlight-next-line
       - CrmCustomersPipeline
-      # highlight-end
 ```
 
 ## Run it

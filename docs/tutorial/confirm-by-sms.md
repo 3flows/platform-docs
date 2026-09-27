@@ -10,29 +10,31 @@ title: 3. Confirm by SMS
 
 ## The solution: `sms`
 
-```diff title="services.ts"
- handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
--    const appointment: Appointment = { id: randomUUID(), ...input };
--    await trigger.context.doc().collection('appointments').by(appointment.id).set(appointment);
-+    const { doc, sms, log } = trigger.context;
-+    const appointment: Appointment = { id: randomUUID(), ...input };
-+
-+    await doc().collection('appointments').by(appointment.id).set(appointment);
-+
-+    await sms()
-+        .to(appointment.phone)
-+        .body(`Hi ${appointment.name}, your appointment on ${appointment.at} is confirmed.`)
-+        .send();
-+    log().stack(`Confirmation SMS sent to ${appointment.phone}`).info();
-+
-     await trigger.ok(appointment);
- }),
+```ts title="services.ts"
+handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
+    // highlight-next-line
+    const { doc, sms, log } = trigger.context;
+    const appointment: Appointment = { id: randomUUID(), ...input };
+
+    await doc().collection('appointments').by(appointment.id).set(appointment);
+
+    // highlight-start
+    await sms()
+        .to(appointment.phone)
+        .body(`Hi ${appointment.name}, your appointment on ${appointment.at} is confirmed.`)
+        .send();
+    log().stack(`Confirmation SMS sent to ${appointment.phone}`).info();
+    // highlight-end
+
+    await trigger.ok(appointment);
+}),
 ```
 
-```diff title="platform.yml"
-+smss:
-+  - name: DEFAULT
-+    type: memory
+
+```yaml title="platform.yml"
+smss:
+  - name: DEFAULT
+    type: memory
 ```
 
 The `memory` SMS provider doesn't send real messages. It keeps them in a local mailbox per phone number, which is perfect for development and tests. For production, switch the `type` to a real provider such as `twilio` and add its parameters.

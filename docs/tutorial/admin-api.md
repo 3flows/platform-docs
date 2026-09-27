@@ -12,15 +12,15 @@ title: 13. Admin API
 
 YAML only:
 
-```diff title="platform.yml"
-+# Read-only control-plane API. Disabled unless explicitly enabled.
-+# In production, protect it with `auth` or expose it on an internal HTTP server only.
-+admins:
-+  - name: admin
-+    useHttp: api
-+    path: /admin
-+    enabled: true
-+    readonly: true
+```yaml title="platform.yml"
+# Read-only control-plane API. Disabled unless explicitly enabled.
+# In production, protect it with `auth` or expose it on an internal HTTP server only.
+admins:
+  - name: admin
+    useHttp: api
+    path: /admin
+    enabled: true
+    readonly: true
 ```
 
 | Endpoint | Describes |

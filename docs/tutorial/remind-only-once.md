@@ -12,36 +12,40 @@ title: 5. Remind only once
 
 We need to remember one small fact per appointment: *has it been reminded?* That's the job of a key-value store.
 
-```diff title="services.ts"
--async function sendDueReminders({ doc, sms, log }: TriggerContext): Promise<number> {
-+async function sendDueReminders({ doc, kv, sms, log }: TriggerContext): Promise<number> {
-     const appointments = await doc().collection('appointments').find({}).all<Appointment>();
--    const due = appointments.filter((appointment) => isDueForReminder(appointment));
-+    let sent = 0;
+```ts title="services.ts"
+// highlight-next-line
+async function sendDueReminders({ doc, kv, sms, log }: TriggerContext): Promise<number> {
+    const appointments = await doc().collection('appointments').find({}).all<Appointment>();
+    // highlight-next-line
+    let sent = 0;
 
--    for (const appointment of due) {
-+    for (const appointment of appointments.filter((appointment) => isDueForReminder(appointment))) {
-+        const reminded = kv().bracket('reminded').key(appointment.id);
-+        if (await reminded.exists()) continue;
-+
-         await sms()
-             .to(appointment.phone)
-             .body(`Reminder: ${appointment.name}, your appointment is on ${appointment.at}.`)
-             .send();
-+        await reminded.set(new Date().toISOString());
-+
-         log().stack(`Reminder SMS sent to ${appointment.phone}`).info();
-+        sent++;
-     }
--    return due.length;
-+    return sent;
- }
+    for (const appointment of appointments.filter((appointment) => isDueForReminder(appointment))) {
+        // highlight-start
+        const reminded = kv().bracket('reminded').key(appointment.id);
+        if (await reminded.exists()) continue;
+        // highlight-end
+
+        await sms()
+            .to(appointment.phone)
+            .body(`Reminder: ${appointment.name}, your appointment is on ${appointment.at}.`)
+            .send();
+        // highlight-next-line
+        await reminded.set(new Date().toISOString());
+
+        log().stack(`Reminder SMS sent to ${appointment.phone}`).info();
+        // highlight-next-line
+        sent++;
+    }
+    // highlight-next-line
+    return sent;
+}
 ```
 
-```diff title="platform.yml"
-+kvs:
-+  - name: DEFAULT
-+    type: memory
+
+```yaml title="platform.yml"
+kvs:
+  - name: DEFAULT
+    type: memory
 ```
 
 A `bracket` groups related keys, like a namespace. For production, `type: redis` or `type: memcached` gives you a shared store without changing code.
