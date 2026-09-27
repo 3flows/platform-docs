@@ -76,4 +76,4 @@ curl localhost:3000/admin/api/entities
 
 Check that it's protected or internal before it goes to production.
 
-[Sample: step 13](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/13-admin) · Next: [What's next](./whats-next.md)
+[Sample: step 13](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/13-admin) · Next: [Natural keys](./natural-keys.md)

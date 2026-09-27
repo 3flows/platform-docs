@@ -22,6 +22,7 @@ https:
 | `services` | Application services |
 | `https` | HTTP servers and exposed service routes |
 | `graphqls` | GraphQL endpoints |
+| `sqls` | Relational databases, used by services and pipelines |
 | `mqs` | Message queues and topics |
 | `timers` | Cron-like timer triggers |
 | `registries` | Service registration and lookup |

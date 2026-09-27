@@ -22,6 +22,12 @@ const sidebars = {
         'tutorial/ontology',
         'tutorial/graphql',
         'tutorial/admin-api',
+        'tutorial/natural-keys',
+        'tutorial/transformers',
+        'tutorial/pipelines',
+        'tutorial/sync-from-a-database',
+        'tutorial/dead-letters',
+        'tutorial/medallion-and-lineage',
         'tutorial/whats-next'
       ]
     },
@@ -34,6 +40,7 @@ const sidebars = {
         'concepts/platform-runtime',
         'concepts/services-and-routes',
         'concepts/domain-model',
+        'concepts/data-pipelines',
         'concepts/discovery',
         'concepts/ownership',
         'concepts/idempotency'
@@ -63,6 +70,7 @@ const sidebars = {
         'configuration/https',
         'configuration/entities',
         'configuration/graphqls',
+        'configuration/sqls',
         'configuration/admins',
         'configuration/mqs',
         'configuration/timers',

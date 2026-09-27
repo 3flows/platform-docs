@@ -72,7 +72,7 @@ AppointmentsOntology.describe();
 | Fields | `o.string()`, `o.number()`, `o.int()`, `o.boolean()`, `o.enum(['FREE', 'PRO'])` |
 | Modifiers | `.optional()`, `.default('FREE')` |
 | Relationships | `o.one(Customer)`, `o.many(Tag)`, `.inverse('appointments')` |
-| Options | `o.entity('Customer', fields, { typeName, collection, db })` |
+| Options | `o.entity('Customer', fields, { typeName, collection, db, key })`. `key` is covered in [chapter 14](./natural-keys.md) |
 | Composition | `ontologyEntity(...)`, `ontologyModule(...)` and `ontology.use(...)` to split big domains into modules |
 
 ## What you learned

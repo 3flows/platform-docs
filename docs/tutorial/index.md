@@ -6,7 +6,7 @@ slug: /tutorial
 
 # Build an appointment reminder app
 
-In this tutorial you build a small but real application: customers book appointments, get a confirmation by SMS, and receive a reminder 24 hours before their appointment. Later, you give it a domain model, a generated GraphQL API and an admin API.
+In this tutorial you build a small but real application: customers book appointments, get a confirmation by SMS, and receive a reminder 24 hours before their appointment. Later, you give it a domain model, a generated GraphQL API and an admin API. Finally, it becomes a small data hub that imports, syncs and exports data through pipelines.
 
 You start with Hello World and add **one concept per chapter**. Every chapter follows the same pattern:
 
@@ -44,7 +44,20 @@ Part 2 continues from the single-process app of chapter 7.
 | [12. GraphQL](./graphql.md) | The front end needs flexible queries | GraphQL generated from the ontology |
 | [13. Admin API](./admin-api.md) | What is actually running? | Admin / control-plane API |
 
-Watch for one recurring theme: more and more chapters need **no code changes at all**. Only YAML changes.
+### Part 3: Become a data hub
+
+Part 3 continues from the app of chapter 13. Data now arrives from more than one place.
+
+| Chapter | Problem | Concept |
+|---|---|---|
+| [14. Natural keys](./natural-keys.md) | The same customer arrives from many sources | Natural keys in the ontology |
+| [15. Transformers](./transformers.md) | Import the old system's CSV, export for analytics | Transformers |
+| [16. Pipelines](./pipelines.md) | Every data source repeats the same plumbing | Pipelines with HTTP and queue triggers |
+| [17. Sync from a database](./sync-from-a-database.md) | A partner's data sits in a SQL database | `sqls`, SQL sources and timer triggers |
+| [18. Dead letters](./dead-letters.md) | Bad records vanish or stop everything | Error policies and dead letters |
+| [19. Medallion layers and lineage](./medallion-and-lineage.md) | Can we replay? Where does the data come from? | Bronze, silver, gold and lineage |
+
+Watch for one recurring theme: more and more chapters need **no code changes at all**. Only YAML changes. In Part 3, the code that remains is mostly declarations: a key, a mapping, a pipeline.
 
 ## The samples
 
