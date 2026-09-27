@@ -118,20 +118,24 @@ export class DataExchangeService extends Service {
 }
 ```
 
-```diff title="platform.yml"
- services:
-   - name: AppointmentsService
-   - name: NotificationsService
-+  - name: DataExchangeService
+```yaml title="platform.yml"
+services:
+  - name: AppointmentsService
+  - name: NotificationsService
+  # highlight-start
+  - name: DataExchangeService
+  # highlight-end
 
- https:
-   - name: api
-     port: 3000
-     services:
-       - name: AppointmentsService
-+      # Every service on a server needs its own path, so the data endpoints live under /data.
-+      - name: DataExchangeService
-+        basepath: /data
+https:
+  - name: api
+    port: 3000
+    services:
+      - name: AppointmentsService
+      # highlight-start
+      # Every service on a server needs its own path, so the data endpoints live under /data.
+      - name: DataExchangeService
+        basepath: /data
+      # highlight-end
 ```
 
 ## Run it

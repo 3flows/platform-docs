@@ -19,62 +19,50 @@ That works for one handler. It doesn't work for a file with 10,000 rows, two imp
 
 Say in the model **what identifies an entity**. The ID is then derived from the data:
 
-```diff title="domain.ts"
- export const AppointmentsOntology = ontology('AppointmentsOntology', (o) => {
--    const Customer = o.entity('Customer', {
--        name: o.string(),
--        phone: o.string()
--    });
-+    // The phone number identifies a customer, wherever the data comes from.
-+    const Customer = o.entity(
-+        'Customer',
-+        {
-+            name: o.string(),
-+            phone: o.string()
-+        },
-+        { key: ['phone'] }
-+    );
+```ts title="domain.ts"
+export const AppointmentsOntology = ontology('AppointmentsOntology', (o) => {
+    // The phone number identifies a customer, wherever the data comes from.
+    const Customer = o.entity(
+        'Customer',
+        {
+            name: o.string(),
+            phone: o.string()
+        },
+        // highlight-next-line
+        { key: ['phone'] }
+    );
 
--    o.entity('Appointment', {
--        at: o.string(),
--        customer: o.one(Customer).inverse('appointments')
--    });
-+    // A customer has at most one appointment at a given time.
-+    o.entity(
-+        'Appointment',
-+        {
-+            at: o.string(),
-+            customer: o.one(Customer).inverse('appointments')
-+        },
-+        { key: ['customer', 'at'] }
-+    );
- });
+    // A customer has at most one appointment at a given time.
+    o.entity(
+        'Appointment',
+        {
+            at: o.string(),
+            customer: o.one(Customer).inverse('appointments')
+        },
+        // highlight-next-line
+        { key: ['customer', 'at'] }
+    );
+});
 ```
 
-Same phone, same ID. `Customers.create(...)` with a known phone number updates the customer instead of adding a second one. Booking no longer needs the lookup:
+Same phone, same ID. `Customers.create(...)` with a known phone number updates the customer instead of adding a second one. Booking no longer needs the lookup, and the `findOrCreateCustomer` helper is gone:
 
-```diff title="appointments.ts"
--/** One customer per phone number: returning customers are recognized. */
--async function findOrCreateCustomer(name: string, phone: string) {
--    const existing = await Customers.find({ phone }).limit(1).next();
--    return existing ?? (await Customers.create({ name, phone }));
--}
--
- handler('bookAppointment', BookAppointment, Appointment, async ({ name, phone, at }, trigger) => {
--    const customer = await findOrCreateCustomer(name, phone);
--    const appointment = await toAppointment(await Appointments.create({ at, customer: customer.reference() }));
-+    // The phone number identifies the customer: same phone, same customer. No lookup needed.
-+    const customer = await Customers.create({ name, phone });
-+
-+    // Customer and time identify the appointment, so booking twice returns the same appointment.
-+    const id = Appointments.identify({ customer: customer.reference(), at })!;
-+    const existing = await Appointments.findById(id);
-+    if (existing) return trigger.ok(await toAppointment(existing));
+```ts title="appointments.ts"
+handler('bookAppointment', BookAppointment, Appointment, async ({ name, phone, at }, trigger) => {
+    // highlight-start
+    // The phone number identifies the customer: same phone, same customer. No lookup needed.
+    const customer = await Customers.create({ name, phone });
 
-+    const appointment = await toAppointment(await Appointments.create({ at, customer: customer.reference() }));
-     await trigger.context.service('NotificationsService').method('appointmentBooked').input(appointment).call();
-     await trigger.ok(appointment);
- }),
+    // Customer and time identify the appointment, so booking twice returns the same appointment.
+    const id = Appointments.identify({ customer: customer.reference(), at })!;
+    const existing = await Appointments.findById(id);
+    if (existing) return trigger.ok(await toAppointment(existing));
+    // highlight-end
+
+    const appointment = await toAppointment(await Appointments.create({ at, customer: customer.reference() }));
+    await trigger.context.service('NotificationsService').method('appointmentBooked').input(appointment).call();
+    await trigger.ok(appointment);
+}),
 ```
 
 `Appointments.identify(...)` computes the ID an appointment *would* have, without touching the store. A double-clicked booking now returns the existing appointment and sends no second confirmation.

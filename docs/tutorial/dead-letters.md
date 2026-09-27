@@ -16,32 +16,36 @@ Skipping loses data silently. Failing stops everything for one bad record. We ne
 
 A dead letter is a record a pipeline couldn't process, **kept with its input and the error**, so someone can look at it, fix the source and send it again.
 
-```diff title="pipelines.ts"
- export class AppointmentImportPipeline extends Pipeline {
-     define() {
-         return this.pipeline('appointment-import')
-             .on.http().post('/appointments')
-             .from.trigger().stream()
-             .parse.csv({ delimiter: ';' })
-             .toEntities(fromLegacyRow)
--            .onError('entity').skip()
-+            .onError('entity').deadLetter()
-+            .deadLetters().to.doc().db('datahub').collection('dead_letters')
-             .save({ batchSize: 500 });
-     }
- }
+Two lines per pipeline. In the import, they replace `.onError('entity').skip()`:
 
- export class CrmCustomersPipeline extends Pipeline {
-     define() {
-         return this.pipeline('crm-customers')
-             .on.mq().queue('crm-customers')
-             .from.trigger().payload()
--            .toEntity(Customers, { name: (customer) => customer.fullName });
-+            .toEntity(Customers, { name: (customer) => customer.fullName })
-+            .onError('entity').deadLetter()
-+            .deadLetters().to.doc().db('datahub').collection('dead_letters');
-     }
- }
+```ts title="pipelines.ts"
+export class AppointmentImportPipeline extends Pipeline {
+    define() {
+        return this.pipeline('appointment-import')
+            .on.http().post('/appointments')
+            .from.trigger().stream()
+            .parse.csv({ delimiter: ';' })
+            .toEntities(fromLegacyRow)
+            // highlight-start
+            .onError('entity').deadLetter()
+            .deadLetters().to.doc().db('datahub').collection('dead_letters')
+            // highlight-end
+            .save({ batchSize: 500 });
+    }
+}
+
+export class CrmCustomersPipeline extends Pipeline {
+    define() {
+        return this.pipeline('crm-customers')
+            .on.mq().queue('crm-customers')
+            .from.trigger().payload()
+            .toEntity(Customers, { name: (customer) => customer.fullName })
+            // highlight-start
+            .onError('entity').deadLetter()
+            .deadLetters().to.doc().db('datahub').collection('dead_letters');
+            // highlight-end
+    }
+}
 ```
 
 Dead letters are documents in `docs`, in the `datahub` database. A small handler makes them visible:

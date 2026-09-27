@@ -40,26 +40,29 @@ export const fromCleanRow: EntityTarget<CleanRow>[] = [
 ];
 ```
 
-The pipeline marks the layers and keeps a copy of each:
+The pipeline marks the layers and keeps a copy of each. The layered steps replace the single `.toEntities(fromLegacyRow)`:
 
-```diff title="pipelines.ts"
- return this.pipeline('appointment-import')
-     .on.http().post('/appointments')
-     .from.trigger().stream()
-     .parse.csv({ delimiter: ';' })
--    .toEntities(fromLegacyRow)
-+    .bronze() // raw: every row exactly as it arrived, kept for replay and audits
-+    .doc().db('bronze').collection('legacy_appointments')
-+    .map(cleanLegacyRow)
-+    .silver() // clean: consistent names, phone numbers and dates
-+    .doc().db('silver').collection('appointments')
-+    .gold() // the domain model
-+    .toEntities(fromCleanRow)
-+    .onError('transform').deadLetter()
-     .onError('entity').deadLetter()
-     .deadLetters().to.doc().db('datahub').collection('dead_letters')
-+    .lineage().to.doc().db('datahub').collection('lineage')
-     .save({ batchSize: 500 });
+```ts title="pipelines.ts"
+return this.pipeline('appointment-import')
+    .on.http().post('/appointments')
+    .from.trigger().stream()
+    .parse.csv({ delimiter: ';' })
+    // highlight-start
+    .bronze() // raw: every row exactly as it arrived, kept for replay and audits
+    .doc().db('bronze').collection('legacy_appointments')
+    .map(cleanLegacyRow)
+    .silver() // clean: consistent names, phone numbers and dates
+    .doc().db('silver').collection('appointments')
+    .gold() // the domain model
+    .toEntities(fromCleanRow)
+    .onError('transform').deadLetter()
+    // highlight-end
+    .onError('entity').deadLetter()
+    .deadLetters().to.doc().db('datahub').collection('dead_letters')
+    // highlight-start
+    .lineage().to.doc().db('datahub').collection('lineage')
+    // highlight-end
+    .save({ batchSize: 500 });
 ```
 
 `.doc().db(...).collection(...)` writes every record passing by, in batches, and passes it on unchanged. Each copy is tagged with the pipeline, the run ID and its layer.

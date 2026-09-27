@@ -49,31 +49,37 @@ Read it top to bottom: *on* a trigger, *from* a source, through steps, *to* a si
 
 A pipeline is a service, so YAML exposes it like one:
 
-```diff title="platform.yml"
- services:
-   - name: AppointmentsService
-   - name: NotificationsService
-   - name: DataExchangeService
-+  - name: AppointmentImportPipeline
-+  - name: CrmCustomersPipeline
+```yaml title="platform.yml"
+services:
+  - name: AppointmentsService
+  - name: NotificationsService
+  - name: DataExchangeService
+  # highlight-start
+  - name: AppointmentImportPipeline
+  - name: CrmCustomersPipeline
+  # highlight-end
 
- https:
-   - name: api
-     port: 3000
-     services:
-       - name: AppointmentsService
-       - name: DataExchangeService
-         basepath: /data
-+      # A pipeline is a service: its HTTP trigger is exposed like any other route.
-+      - name: AppointmentImportPipeline
-+        basepath: /data/imports
+https:
+  - name: api
+    port: 3000
+    services:
+      - name: AppointmentsService
+      - name: DataExchangeService
+        basepath: /data
+      # highlight-start
+      # A pipeline is a service: its HTTP trigger is exposed like any other route.
+      - name: AppointmentImportPipeline
+        basepath: /data/imports
+      # highlight-end
 
- mqs:
-   - name: DEFAULT
-     type: memory
-     use:
-       - NotificationsService
-+      - CrmCustomersPipeline
+mqs:
+  - name: DEFAULT
+    type: memory
+    use:
+      - NotificationsService
+      # highlight-start
+      - CrmCustomersPipeline
+      # highlight-end
 ```
 
 ## Run it

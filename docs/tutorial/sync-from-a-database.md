@@ -46,22 +46,28 @@ export class PracticeSyncPipeline extends Pipeline {
 
 `from.sql('practice')` uses the same fluent SQL API as `sql()` in any service. The rows are streamed, not loaded at once.
 
-```diff title="platform.yml"
- services:
-   …
-+  - name: PracticeSyncPipeline
+```yaml title="platform.yml"
+services:
+  # …
+  # highlight-start
+  - name: PracticeSyncPipeline
+  # highlight-end
 
- https:
-   - name: api
-     services:
-       …
-+      - name: PracticeSyncPipeline
-+        basepath: /data/syncs
+https:
+  - name: api
+    services:
+      # …
+      # highlight-start
+      - name: PracticeSyncPipeline
+        basepath: /data/syncs
+      # highlight-end
 
-+# The database of the partner practice. Read by the PracticeSyncPipeline.
-+sqls:
-+  - name: practice
-+    type: memory # or postgres, mariadb, sqlite
+# highlight-start
+# The database of the partner practice. Read by the PracticeSyncPipeline.
+sqls:
+  - name: practice
+    type: memory # or postgres, mariadb, sqlite
+# highlight-end
 ```
 
 In production, `type: postgres` with `parameters.connectionString` points at the real database. Same code. See the [SQL reference](../configuration/sqls.md).
