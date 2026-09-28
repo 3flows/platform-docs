@@ -79,7 +79,7 @@ handler('deadLetters', t.object({}).optional(), t.array(DeadLetter), async (_inp
 ## Run it
 
 ```sh
-npm run step:15
+yarn step:15
 curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
 # { …, "written": 4, "invalid": 2, "deadLettered": 2 }
 curl -X POST localhost:3000/data/deadLetters

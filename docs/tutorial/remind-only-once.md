@@ -53,7 +53,7 @@ A `bracket` groups related keys, like a namespace. For production, `type: redis`
 ## Run it
 
 ```sh
-npm run step:05
+yarn step:05
 # book an appointment as in the previous chapter, then:
 curl -X POST localhost:3000/sendDueReminders   # {"sent":1}
 curl -X POST localhost:3000/sendDueReminders   # {"sent":0}

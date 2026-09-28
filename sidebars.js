@@ -13,6 +13,7 @@ const sidebars = {
           label: 'Part 1: Build it',
           collapsed: false,
           items: [
+            'tutorial/setup',
             'tutorial/hello-world',
             'tutorial/book-an-appointment',
             'tutorial/store-appointments',

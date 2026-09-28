@@ -87,7 +87,7 @@ mqs:
 ## Run it
 
 ```sh
-npm run step:13
+yarn step:13
 curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
 ```
 

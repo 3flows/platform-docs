@@ -26,6 +26,7 @@ The basic primitives: services, storage, messaging and time.
 
 | Chapter | Problem | Concept |
 |---|---|---|
+| [Set up a project](./setup.md) | Where do I start? | `package.json`, `.yarnrc.yml`, `tsconfig.json` |
 | [0. Hello World](./hello-world.md) | How little does it take? | Service, handler, YAML |
 | [1. Book an appointment](./book-an-appointment.md) | We need a real API | Handlers with schemas |
 | [2. Store appointments](./store-appointments.md) | Appointments disappear | `docs` |
@@ -83,18 +84,19 @@ Watch for one recurring theme: more and more chapters need **no code changes at 
 
 Every chapter has a complete, tested project in the [platform-samples](https://github.com/3flows/platform-samples/tree/main/appointment-reminders) repository. All steps use in-memory providers, so you need no database, message broker or SMS account.
 
-Requirements: Node.js 24+.
+Requirements: access to the 3flows repositories, Node.js 24+ and Corepack, which comes with Node.js.
+
+The samples use platform features that are not yet published to the package registry. Until they are, they link a checkout of the platform next to the samples:
 
 ```sh
+corepack enable
+git clone https://github.com/3flows/platform.git
+(cd platform && git checkout nx && yarn install && yarn build)
 git clone https://github.com/3flows/platform-samples.git
 cd platform-samples/appointment-reminders
-npm install
-npm test          # runs the test of every step
-npm run step:00   # runs a single step
+yarn install
+yarn test      # runs the test of every step
+yarn step:00   # runs a single step
 ```
 
-:::note
-The samples use platform features that are not yet published to the package registry. Until they are, the samples reference a sibling checkout of the platform repository. See the [samples README](https://github.com/3flows/platform-samples#run) for details.
-:::
-
-Ready? Start with [Hello World](./hello-world.md).
+Ready? To follow along in your own project, [set one up](./setup.md) first. Otherwise, start with [Hello World](./hello-world.md).

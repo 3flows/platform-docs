@@ -80,7 +80,7 @@ The timer belongs to the pipeline: it starts with the pipeline and stops with it
 The sample seeds the memory database with the three patients above (`seed.ts`).
 
 ```sh
-npm run step:14
+yarn step:14
 curl -X POST localhost:3000/data/syncs/practice
 ```
 

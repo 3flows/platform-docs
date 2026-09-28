@@ -140,7 +140,7 @@ https:
 ## Run it
 
 ```sh
-npm run step:12
+yarn step:12
 curl -X POST localhost:3000/data/importAppointments -H 'Content-Type: application/json' \
   -d '{"csv":"Name;Mobile;Date;Notes\nAda Lovelace;+1 555 000 0001;2030-01-15 10:00;first visit\nGrace Hopper;+1 555 000 0002;2030-01-16 09:30;\nNo Phone;;2030-01-17 11:00;\n"}'
 ```

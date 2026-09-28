@@ -73,7 +73,7 @@ return this.pipeline('appointment-import')
 ## Run it
 
 ```sh
-npm run step:16
+yarn step:16
 curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
 curl -X POST localhost:3000/data/syncs/practice
 ```

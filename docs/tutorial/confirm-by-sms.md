@@ -42,7 +42,7 @@ The `memory` SMS provider doesn't send real messages. It keeps them in a local m
 ## Run it
 
 ```sh
-npm run step:03
+yarn step:03
 curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
   -d '{"name":"Ada","phone":"+15550000001","at":"2030-01-01T10:00:00Z"}'
 ```

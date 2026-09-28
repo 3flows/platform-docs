@@ -102,7 +102,7 @@ The key is compared as data. `+1 555 000 0001` and `+15550000001` are different 
 ## Run it
 
 ```sh
-npm run step:11
+yarn step:11
 curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
   -d '{"name":"Ada","phone":"+15550000001","at":"2030-01-15T10:00:00.000Z"}'
 # the same request again returns the same id, and no second SMS is sent

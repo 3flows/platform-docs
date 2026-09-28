@@ -84,8 +84,8 @@ When the app calls `service('NotificationsService')`, the platform looks for the
 ## Run it
 
 ```sh
-npm run step:20:notifications   # terminal 1
-npm run step:20:appointments    # terminal 2
+yarn step:20:notifications   # terminal 1
+yarn step:20:appointments    # terminal 2
 
 curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
   -d '{"name":"Ada","phone":"+15550000001","at":"2030-01-01T10:00:00Z"}'

@@ -80,9 +80,9 @@ When the app calls `service('NotificationsService')`, the platform now looks in 
 ## Run it
 
 ```sh
-npm run step:21:registry        # terminal 1
-npm run step:21:notifications   # terminal 2
-npm run step:21:appointments    # terminal 3
+yarn step:21:registry        # terminal 1
+yarn step:21:notifications   # terminal 2
+yarn step:21:appointments    # terminal 3
 ```
 
 Ask the registry what it knows:

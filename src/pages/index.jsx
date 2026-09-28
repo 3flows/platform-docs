@@ -60,6 +60,7 @@ const points = [
 ];
 
 const journey = [
+  { step: '·', label: 'Set up', to: '/docs/tutorial/setup' },
   { step: '0', label: 'Hello World', to: '/docs/tutorial/hello-world' },
   { step: '2', label: 'Store data', to: '/docs/tutorial/store-appointments' },
   { step: '4', label: 'Timers', to: '/docs/tutorial/send-reminders' },

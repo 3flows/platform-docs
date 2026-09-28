@@ -4,6 +4,8 @@ title: 0. Hello World
 
 # 0. Hello World
 
+**Where we are:** an empty project that starts the platform, from [Set up a project](./setup.md). Or the samples, if you just want to run the steps.
+
 **Goal:** see how little it takes to run a service.
 
 ## The code
@@ -57,10 +59,12 @@ import './services.js';
 await Platform.run('./steps/00-hello-world/platform.yml');
 ```
 
+That's the path in the samples, where every step has its own folder. In a project from [Set up a project](./setup.md), it's `./platform.yml`, and `main.ts` gets one new line: `import './services.js';`.
+
 ## Run it
 
 ```sh
-npm run step:00
+yarn step:00
 curl -X POST localhost:3000/hello -H 'Content-Type: application/json' -d '{"name":"Ada"}'
 ```
 

@@ -68,7 +68,7 @@ In production you'd probably run it hourly. That's a YAML change.
 ## Run it
 
 ```sh
-npm run step:04
+yarn step:04
 curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
   -d "{\"name\":\"Ada\",\"phone\":\"+15550000001\",\"at\":\"$(date -u -v+20H +%Y-%m-%dT%H:%M:%SZ)\"}"
 curl -X POST localhost:3000/sendDueReminders

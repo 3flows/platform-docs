@@ -203,7 +203,7 @@ https:
 ## Run it
 
 ```sh
-npm run step:17
+yarn step:17
 curl -X POST localhost:3000/data/flows/referrals -H 'Content-Type: application/json' -d @referrals.json
 ```
 
