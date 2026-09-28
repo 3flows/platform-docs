@@ -84,14 +84,11 @@ Watch for one recurring theme: more and more chapters need **no code changes at 
 
 Every chapter has a complete, tested project in the [platform-samples](https://github.com/3flows/platform-samples/tree/main/appointment-reminders) repository. All steps use in-memory providers, so you need no database, message broker or SMS account.
 
-Requirements: access to the 3flows repositories, Node.js 24+ and Corepack, which comes with Node.js.
-
-The samples use platform features that are not yet published to the package registry. Until they are, they link a checkout of the platform next to the samples:
+Requirements: access to the 3flows repositories, a GitHub token with `read:packages` for the platform package, and Node.js 24+ with Corepack. The [setup page](./setup.md) explains all three.
 
 ```sh
 corepack enable
-git clone https://github.com/3flows/platform.git
-(cd platform && git checkout nx && yarn install && yarn build)
+export NPM_REPOSITORY_GH_TOKEN=<a GitHub token with read:packages>
 git clone https://github.com/3flows/platform-samples.git
 cd platform-samples/appointment-reminders
 yarn install

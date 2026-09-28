@@ -12,18 +12,12 @@ If you only want to run the tutorial's samples, skip to [The samples](./index.md
 ## What you need
 
 - **Access to the 3flows repositories on GitHub.** The platform isn't public yet.
+- **A GitHub token with `read:packages`.** The platform is published to GitHub Packages as `@3flows/platform`, and GitHub Packages needs a token even to read. Create a personal access token (classic) with the `read:packages` scope.
 - **Node.js 24+.** It comes with Corepack, which provides the right Yarn version per project.
-- **A local checkout of the platform**, branch `nx`. The features used in this tutorial aren't published to the package registry yet, so projects link the checkout directly. [Later](#later-install-from-the-registry), this becomes a normal dependency.
 
 ```sh
 corepack enable
-
-git clone https://github.com/3flows/platform.git
-cd platform
-git checkout nx
-yarn install
-yarn build
-cd ..
+export NPM_REPOSITORY_GH_TOKEN=<your token>   # e.g. in your shell profile
 ```
 
 ## Start from the starter
@@ -36,9 +30,7 @@ cp -r platform-samples/starter appointment-reminders
 cd appointment-reminders
 ```
 
-In `package.json`, change `portal:../../platform` to `portal:../platform`. Inside the samples repository, the platform is two folders up. In your copy, it's one.
-
-It contains five files. Here's what they do, so you could also write them yourself.
+It contains five files and a `yarn.lock`. Here's what they do, so you could also write them yourself.
 
 ### `package.json`
 
@@ -58,7 +50,7 @@ It contains five files. Here's what they do, so you could also write them yourse
     "test": "yarn build && node --test dist/*.test.js"
   },
   "dependencies": {
-    "@3flows/platform": "portal:../platform"
+    "@3flows/platform": "next"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
@@ -69,7 +61,7 @@ It contains five files. Here's what they do, so you could also write them yourse
 
 - `"type": "module"` is required. The platform is an ES module package.
 - `packageManager` makes Corepack use the same Yarn version for everyone.
-- `portal:../platform` links the platform checkout next to your project. Adjust the path if your checkout is somewhere else. A `portal:` link follows the checkout, so after `yarn build` in the platform, your project uses the new build right away.
+- `next` is the tag of the platform's preview builds, which have everything this tutorial uses. `yarn.lock` pins the exact version, so everyone on the project gets the same build. `yarn up @3flows/platform@next` moves to the newest one.
 - `name` and `version` are what the platform reports in `/ping`, OpenAPI and GraphQL. More on that in [chapter 18](./operate-it.md).
 
 ### `.yarnrc.yml`
@@ -79,7 +71,6 @@ It contains five files. Here's what they do, so you could also write them yourse
 nodeLinker: node-modules
 
 # The platform is published to GitHub Packages, which needs a token with read:packages.
-# Only used once the dependency comes from the registry instead of a local checkout.
 npmScopes:
   3flows:
     npmRegistryServer: "https://npm.pkg.github.com"
@@ -91,7 +82,7 @@ npmPreapprovedPackages:
   - "@3flows/*"
 ```
 
-The token is read from an environment variable, so the file can be committed as it is. With a `portal:` link, you don't need the token yet.
+`npmScopes` sends `@3flows` packages to GitHub Packages, and everything else to the public npm registry. The token is read from an environment variable, so the file can be committed as it is.
 
 ### `tsconfig.json`
 
@@ -164,32 +155,24 @@ The platform is running, and there's nothing in it yet. That's [chapter 0](./hel
 | Symptom | Cause |
 |---|---|
 | `yarn: command not found`, or the wrong Yarn version | Run `corepack enable` |
-| `Manifest not found` during `yarn install` | The `portal:` path doesn't point to the platform checkout |
-| `Cannot find module '@3flows/platform'` when starting | The platform checkout isn't built. Run `yarn build` in the platform |
+| `YN0041: @3flows/platform@npm:…: Invalid authentication (as an anonymous user)`, or `401 Unauthorized` | `NPM_REPOSITORY_GH_TOKEN` isn't set in this shell, or the token lacks `read:packages` |
+| `All versions satisfying … are quarantined` | Yarn holds back versions younger than a day. `npmPreapprovedPackages` is missing in `.yarnrc.yml` |
 | `TS1309: The current file is a CommonJS module and cannot use 'await' at the top level` | `"type": "module"` is missing in `package.json` |
 | `TS5052: Option 'emitDecoratorMetadata' cannot be specified without specifying option 'experimentalDecorators'` | `experimentalDecorators` is missing in `tsconfig.json` |
 | `cannot register appointmentsservice::default`, then `Cannot read properties of undefined (reading '_initialise')` | YAML names a service that isn't loaded. Import its file in `main.ts` |
 | `.pnp.cjs` appears, and modules aren't found | `nodeLinker: node-modules` is missing in `.yarnrc.yml` |
 | `EADDRINUSE: address already in use :::3000` | Another step or app is still running |
 
-## Later: install from the registry
+## Working on the platform itself
 
-Once the platform features are published, the local checkout isn't needed anymore:
+To try an unreleased change of the platform in your project, link a local checkout instead of the registry version:
 
 ```json title="package.json"
 "dependencies": {
-  "@3flows/platform": "next"
+  "@3flows/platform": "portal:../platform"
 }
 ```
 
-```sh
-export NPM_REPOSITORY_GH_TOKEN=<a GitHub token with read:packages>
-yarn install
-```
-
-| Symptom | Cause |
-|---|---|
-| `401 Unauthorized` from `npm.pkg.github.com` | `NPM_REPOSITORY_GH_TOKEN` isn't set, or the token lacks `read:packages` |
-| `All versions satisfying … are quarantined` | The version is less than a day old, and `npmPreapprovedPackages` is missing |
+Run `yarn build` in the platform after every change. The `portal:` link follows the checkout, so your project uses the new build right away. Switch back to `"next"` before you commit.
 
 Next: [Hello World](./hello-world.md)
