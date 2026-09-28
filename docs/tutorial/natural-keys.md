@@ -1,19 +1,23 @@
 ---
-title: 14. Natural keys
+title: 11. Natural keys
 ---
 
-# 14. Natural keys
+# 11. Natural keys
 
-**Where we are:** the app from [chapter 13](./admin-api.md): entities described by an ontology, a generated GraphQL API and an admin API. Part 3 of the tutorial continues from there.
+**Where we are:** entities described by an ontology, and a generated GraphQL API.
 
-**The problem:** customers and appointments are about to arrive from more than one place: the booking API, the old booking system, a partner CRM and a partner practice. Today, identity is a random ID created on first save. Recognizing a returning customer takes a lookup before every write:
+**The problem:** at the end of the last chapter, GraphQL created a second Ada. Recognizing a returning customer is a lookup in one handler:
 
 ```ts
 const existing = await Customers.find({ phone }).limit(1).next();
 return existing ?? (await Customers.create({ name, phone }));
 ```
 
-That works for one handler. It doesn't work for a file with 10,000 rows, two imports running at the same time, or a sync that runs every night. Each of them would need the same lookup, and would create duplicates if it didn't have it.
+Every other way to write a customer bypasses it: the generated `addCustomer` mutation, a script, and, in the next part, a CSV import with 10,000 rows, a nightly sync and a partner CRM. Each of them would need the same lookup, and would create duplicates if it didn't have it. Even with the lookup, two requests at the same moment both find nothing and both create.
+
+Booking has the same problem one level down: a double-clicked *Book* button books the same slot twice, and sends two confirmations.
+
+The rule *"one customer per phone number"* belongs to the model, not to a handler.
 
 ## The solution: natural keys in the ontology
 
@@ -67,7 +71,18 @@ handler('bookAppointment', BookAppointment, Appointment, async ({ name, phone, a
 
 `Appointments.identify(...)` computes the ID an appointment *would* have, without touching the store. A double-clicked booking now returns the existing appointment and sends no second confirmation.
 
-**No YAML changes.** The key is part of the model.
+**No YAML changes.** The key is part of the model, so GraphQL uses it too. The mutation from the last chapter now updates Ada instead of adding a second one:
+
+```json
+{
+  "totalCount": 1,
+  "elements": [
+    { "name": "Ada Lovelace", "phone": "+15550000001", "appointments": { "totalCount": 1 } }
+  ]
+}
+```
+
+Her appointment stays attached, because her ID didn't change.
 
 ## How the ID is derived
 
@@ -81,13 +96,13 @@ handler('bookAppointment', BookAppointment, Appointment, async ({ name, phone, a
 | Description | `AppointmentsOntology.describe()` and `GET /admin/api/entities` show the `key` |
 
 :::caution
-The key is compared as data. `+1 555 000 0001` and `+15550000001` are different keys. Normalize key fields before they reach the entity. That's exactly what the mapping in the next chapter does.
+The key is compared as data. `+1 555 000 0001` and `+15550000001` are different keys. Normalize key fields before they reach the entity. That's exactly what the mapping in [chapter 12](./transformers.md) does.
 :::
 
 ## Run it
 
 ```sh
-npm run step:14
+npm run step:11
 curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
   -d '{"name":"Ada","phone":"+15550000001","at":"2030-01-15T10:00:00.000Z"}'
 # the same request again returns the same id, and no second SMS is sent
@@ -96,12 +111,12 @@ curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' 
 ## What you learned
 
 - **Identity belongs to the model.** A natural key says what makes two records the same thing.
-- Derived IDs make writes idempotent: create twice, get one entity. This is what makes imports and syncs safe to repeat.
+- Derived IDs make writes idempotent: create twice, get one entity. Handlers, GraphQL and every future import agree on who Ada is, without a lookup and without knowing about each other.
 
 ## Reviewer's view
 
-> A customer is identified by its phone number, an appointment by customer and time. Creating a known customer updates it: the latest data wins. Booking the same slot twice returns the existing appointment.
+> A customer is identified by its phone number, an appointment by customer and time. Creating a known customer updates it, wherever it's created: the latest data wins. Booking the same slot twice returns the existing appointment.
 
 The review question is about the model, not the code: *is the phone number really what identifies a customer?* If two customers can share a phone, the key is wrong.
 
-[Sample: step 14](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/14-natural-keys) · Next: [Transformers](./transformers.md)
+[Sample: step 11](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/11-natural-keys) · Next: [Part 3: Transformers](./transformers.md)

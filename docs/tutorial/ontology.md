@@ -1,8 +1,8 @@
 ---
-title: 11. Ontology
+title: 9. Ontology
 ---
 
-# 11. Ontology
+# 9. Ontology
 
 **Where we are:** `Customer` and `Appointment` are entities. `Appointment` references its customer.
 
@@ -71,7 +71,7 @@ AppointmentsOntology.describe();
 | Fields | `o.string()`, `o.number()`, `o.int()`, `o.boolean()`, `o.enum(['FREE', 'PRO'])` |
 | Modifiers | `.optional()`, `.default('FREE')` |
 | Relationships | `o.one(Customer)`, `o.many(Tag)`, `.inverse('appointments')` |
-| Options | `o.entity('Customer', fields, { typeName, collection, db, key })`. `key` is covered in [chapter 14](./natural-keys.md) |
+| Options | `o.entity('Customer', fields, { typeName, collection, db, key })`. `key` is covered in [chapter 11](./natural-keys.md) |
 | Composition | `ontologyEntity(...)`, `ontologyModule(...)` and `ontology.use(...)` to split big domains into modules |
 
 ## What you learned
@@ -85,4 +85,4 @@ AppointmentsOntology.describe();
 
 This is the page a reviewer reads first.
 
-[Sample: step 11](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/11-ontology) · Next: [GraphQL](./graphql.md)
+[Sample: step 09](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/09-ontology) · Next: [GraphQL](./graphql.md)

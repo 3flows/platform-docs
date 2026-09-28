@@ -34,7 +34,7 @@ ontology('AppointmentsOntology', (o) => {
 
 Large domains can be composed from modules with `ontologyEntity`, `ontologyModule` and `ontology.use(...)`.
 
-A **natural key** says what identifies an entity: `o.entity('Customer', fields, { key: ['phone'] })`. The ID is then derived from the key, so the same data always gets the same entity. That's what makes imports and syncs safe to repeat. See [Transformers, pipelines and lineage](./data-pipelines.md).
+A **natural key** says what identifies an entity: `o.entity('Customer', fields, { key: ['phone'] })`. The ID is then derived from the key, so the same data always gets the same entity. That's what makes imports and syncs safe to repeat. See [Transformers, pipelines, flows and lineage](./data-pipelines.md).
 
 ## Why this matters for review
 

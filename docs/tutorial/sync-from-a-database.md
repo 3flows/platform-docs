@@ -1,8 +1,8 @@
 ---
-title: 17. Sync from a database
+title: 14. Sync from a database
 ---
 
-# 17. Sync from a database
+# 14. Sync from a database
 
 **Where we are:** pipelines import CSV uploads and CRM messages.
 
@@ -47,10 +47,12 @@ export class PracticeSyncPipeline extends Pipeline {
 `from.sql('practice')` uses the same fluent SQL API as `sql()` in any service. The rows are streamed, not loaded at once.
 
 ```yaml title="platform.yml"
-services:
-  # …
-  # highlight-next-line
-  - name: PracticeSyncPipeline
+pipelines:
+  register:
+    - name: AppointmentImportPipeline
+    - name: CrmCustomersPipeline
+    # highlight-next-line
+    - name: PracticeSyncPipeline
 
 https:
   - name: api
@@ -78,7 +80,7 @@ The timer belongs to the pipeline: it starts with the pipeline and stops with it
 The sample seeds the memory database with the three patients above (`seed.ts`).
 
 ```sh
-npm run step:17
+npm run step:14
 curl -X POST localhost:3000/data/syncs/practice
 ```
 
@@ -102,4 +104,4 @@ Now Mary changes her last name in the practice software, and the sync runs again
 
 Worth checking: *is `mobile` in the partner's database in the same format as ours?* If not, normalize it in the mapping, as for the old system.
 
-[Sample: step 17](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/17-sql-sync) · Next: [Dead letters](./dead-letters.md)
+[Sample: step 14](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/14-sql-sync) · Next: [Dead letters](./dead-letters.md)

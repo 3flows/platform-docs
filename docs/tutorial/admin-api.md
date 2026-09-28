@@ -1,12 +1,12 @@
 ---
-title: 13. Admin API
+title: 19. Admin API
 ---
 
-# 13. Admin API
+# 19. Admin API
 
-**Where we are:** a service with entities, an ontology and a generated GraphQL API.
+**Where we are:** the complete app, with health checks, metrics and an OpenAPI description.
 
-**The problem:** a running system is more than its code. *Which services are up? What configuration is active? How are entities mapped to storage?* Operators, consoles and agents need a way to look inside a running platform.
+**The problem:** `/ping` says the app is healthy, but a running system is more than a status. *Which services are up? Did the pipelines and the flow start? What configuration is active after all the `${{ … }}` variables are resolved? How are entities mapped to storage, and what are their keys?* Operators, consoles and agents need a way to look inside a running platform.
 
 ## The solution: the admin (control-plane) API
 
@@ -35,6 +35,24 @@ admins:
 | `POST /admin/api/reload` | Reloads the configuration. Only with `readonly: false` and `allowReload: true` |
 
 ```sh
+curl localhost:3000/admin/api/summary
+```
+
+```json
+{
+  "running": true,
+  "readonly": true,
+  "reloadEnabled": false,
+  "services": { "total": 29, "ready": 29, "failed": 0 },
+  "entities": { "total": 2 },
+  "ontologies": { "total": 1 },
+  "graphqls": { "total": 1 }
+}
+```
+
+29 services: your four services, four pipelines and the flow, plus the platform's own services for `docs`, `kv`, `sqls`, `mqs`, timers and so on. `GET /admin/api/services` lists each of them with its status and dependencies.
+
+```sh
 curl localhost:3000/admin/api/entities
 ```
 
@@ -45,6 +63,7 @@ curl localhost:3000/admin/api/entities
     "backend": "docs",
     "db": "appointments",
     "collection": "Appointments",
+    "key": ["customer", "at"],
     "fields": [
       { "name": "_id", "type": "string", "required": false },
       { "name": "at", "type": "string", "required": true },
@@ -76,4 +95,4 @@ curl localhost:3000/admin/api/entities
 
 Check that it's protected or internal before it goes to production.
 
-[Sample: step 13](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/13-admin) · Next: [Natural keys](./natural-keys.md)
+[Sample: step 19](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/19-admin) · Next: [Part 5: Separate processes](./separate-processes.md)

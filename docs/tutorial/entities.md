@@ -1,10 +1,10 @@
 ---
-title: 10. Entities
+title: 8. Entities
 ---
 
-# 10. Entities
+# 8. Entities
 
-**Where we are:** appointments are raw documents in `docs`: `{ id, name, phone, at }`.
+**Where we are:** the app from Part 1. `AppointmentsService` and `NotificationsService` run in one process, and appointments are raw documents in `docs`: `{ id, name, phone, at }`. Part 2 gives this data a shape.
 
 **The problem:** raw documents get us surprisingly far, but the domain is starting to show:
 
@@ -110,4 +110,4 @@ Entities validate on every `create` and `save`. Invalid data never reaches the s
 
 > Two entities with a reference from `Appointment` to `Customer`. Booking finds or creates the customer by phone number. The API contract is unchanged.
 
-[Sample: step 10](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/10-entities) · Next: [Ontology](./ontology.md)
+[Sample: step 08](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/08-entities) · Next: [Ontology](./ontology.md)

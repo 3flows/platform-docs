@@ -1,8 +1,8 @@
 ---
-title: 12. GraphQL
+title: 10. GraphQL
 ---
 
-# 12. GraphQL
+# 10. GraphQL
 
 **Where we are:** the domain is described by an ontology.
 
@@ -91,4 +91,30 @@ GraphQL can also run on its own port (`port` instead of `useHttp`), with `playgr
 
 The review question is about exposure, not implementation: *should these entities be readable and writable through GraphQL, and by whom?* That's where `auth` comes in.
 
-[Sample: step 12](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/12-graphql) · Next: [Admin API](./admin-api.md)
+## The catch
+
+Ada booked through the API. Now the front-end team builds a "new customer" form on top of the generated mutation, and reception adds Ada again, with her full name:
+
+```graphql
+mutation {
+  addCustomer(input: { name: "Ada Lovelace", phone: "+15550000001" }) { _id }
+}
+```
+
+```graphql
+{ customers { totalCount elements { name phone appointments { totalCount } } } }
+```
+
+```json
+{
+  "totalCount": 2,
+  "elements": [
+    { "name": "Ada", "phone": "+15550000001", "appointments": { "totalCount": 1 } },
+    { "name": "Ada Lovelace", "phone": "+15550000001", "appointments": { "totalCount": 0 } }
+  ]
+}
+```
+
+**Two Adas, one phone number.** The second one has no appointments, and the next booking might attach to either. The rule *"one customer per phone number"* lives in `findOrCreateCustomer`, inside one handler. The generated mutation has never heard of it.
+
+[Sample: step 10](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/10-graphql) · Next: [Natural keys](./natural-keys.md)

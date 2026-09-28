@@ -1,10 +1,10 @@
 ---
-title: 15. Transformers
+title: 12. Transformers
 ---
 
-# 15. Transformers
+# 12. Transformers
 
-**Where we are:** customers and appointments have natural keys. Creating the same customer twice updates it.
+**Where we are:** the app from Part 2: an ontology with natural keys and a generated GraphQL API. Creating the same customer twice updates it. So far, every record was typed in by a person. Part 3 is about data that arrives from other systems.
 
 **The problem:** the practice used an old booking system before. It can export its appointments as CSV, and those appointments should get reminders too:
 
@@ -140,7 +140,7 @@ https:
 ## Run it
 
 ```sh
-npm run step:15
+npm run step:12
 curl -X POST localhost:3000/data/importAppointments -H 'Content-Type: application/json' \
   -d '{"csv":"Name;Mobile;Date;Notes\nAda Lovelace;+1 555 000 0001;2030-01-15 10:00;first visit\nGrace Hopper;+1 555 000 0002;2030-01-16 09:30;\nNo Phone;;2030-01-17 11:00;\n"}'
 ```
@@ -203,4 +203,4 @@ Transformers are ordinary Node.js `Transform` streams. They work with files, HTT
 
 The mapping is the part to review closely. Everything else is plumbing.
 
-[Sample: step 15](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/15-transformers) · Next: [Pipelines](./pipelines.md)
+[Sample: step 12](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/12-transformers) · Next: [Pipelines](./pipelines.md)

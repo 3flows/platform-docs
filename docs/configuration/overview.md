@@ -23,6 +23,8 @@ https:
 | `https` | HTTP servers and exposed service routes |
 | `graphqls` | GraphQL endpoints |
 | `sqls` | Relational databases, used by services and pipelines |
+| `pipelines` | Data pipelines to start |
+| `flows` | Flows to start, and where their runs are kept |
 | `mqs` | Message queues and topics |
 | `timers` | Cron-like timer triggers |
 | `registries` | Service registration and lookup |

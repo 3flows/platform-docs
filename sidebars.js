@@ -8,26 +8,63 @@ const sidebars = {
       collapsed: false,
       link: { type: 'doc', id: 'tutorial/index' },
       items: [
-        'tutorial/hello-world',
-        'tutorial/book-an-appointment',
-        'tutorial/store-appointments',
-        'tutorial/confirm-by-sms',
-        'tutorial/send-reminders',
-        'tutorial/remind-only-once',
-        'tutorial/dont-block-booking',
-        'tutorial/notifications-service',
-        'tutorial/separate-processes',
-        'tutorial/operate-it',
-        'tutorial/entities',
-        'tutorial/ontology',
-        'tutorial/graphql',
-        'tutorial/admin-api',
-        'tutorial/natural-keys',
-        'tutorial/transformers',
-        'tutorial/pipelines',
-        'tutorial/sync-from-a-database',
-        'tutorial/dead-letters',
-        'tutorial/medallion-and-lineage',
+        {
+          type: 'category',
+          label: 'Part 1: Build it',
+          collapsed: false,
+          items: [
+            'tutorial/hello-world',
+            'tutorial/book-an-appointment',
+            'tutorial/store-appointments',
+            'tutorial/confirm-by-sms',
+            'tutorial/send-reminders',
+            'tutorial/remind-only-once',
+            'tutorial/dont-block-booking',
+            'tutorial/notifications-service'
+          ]
+        },
+        {
+          type: 'category',
+          label: 'Part 2: Model and expose it',
+          collapsed: false,
+          items: [
+            'tutorial/entities',
+            'tutorial/ontology',
+            'tutorial/graphql',
+            'tutorial/natural-keys'
+          ]
+        },
+        {
+          type: 'category',
+          label: 'Part 3: Become a data hub',
+          collapsed: false,
+          items: [
+            'tutorial/transformers',
+            'tutorial/pipelines',
+            'tutorial/sync-from-a-database',
+            'tutorial/dead-letters',
+            'tutorial/medallion-and-lineage',
+            'tutorial/flows'
+          ]
+        },
+        {
+          type: 'category',
+          label: 'Part 4: Operate it',
+          collapsed: false,
+          items: [
+            'tutorial/operate-it',
+            'tutorial/admin-api'
+          ]
+        },
+        {
+          type: 'category',
+          label: 'Part 5: Scale it',
+          collapsed: false,
+          items: [
+            'tutorial/separate-processes',
+            'tutorial/discovery'
+          ]
+        },
         'tutorial/whats-next'
       ]
     },
@@ -71,6 +108,7 @@ const sidebars = {
         'configuration/entities',
         'configuration/graphqls',
         'configuration/sqls',
+        'configuration/pipelines-and-flows',
         'configuration/admins',
         'configuration/mqs',
         'configuration/timers',

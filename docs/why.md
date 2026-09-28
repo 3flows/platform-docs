@@ -61,4 +61,4 @@ Scaling out implementations becomes much easier with agents. The next `docs` bac
 
 We still need this abstraction layer, and we will keep working on the 3flows Platform. Not because we built it, but because it lets humans stay responsible for systems that agents help build.
 
-**See it for yourself:** the [tutorial](./tutorial/index.md) builds an appointment reminder app from Hello World to two cooperating processes, one small step at a time.
+**See it for yourself:** the [tutorial](./tutorial/index.md) builds an appointment reminder app from Hello World to a small data hub in cooperating processes, one small step at a time.

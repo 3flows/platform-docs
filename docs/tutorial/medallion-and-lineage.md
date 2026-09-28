@@ -1,8 +1,8 @@
 ---
-title: 19. Medallion layers and lineage
+title: 16. Medallion layers and lineage
 ---
 
-# 19. Medallion layers and lineage
+# 16. Medallion layers and lineage
 
 **Where we are:** three pipelines feed the domain model. Records that can't be processed become dead letters.
 
@@ -73,7 +73,7 @@ return this.pipeline('appointment-import')
 ## Run it
 
 ```sh
-npm run step:19
+npm run step:16
 curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
 curl -X POST localhost:3000/data/syncs/practice
 ```
@@ -142,4 +142,8 @@ With `.lineage().to.doc()`, runs are stored in `<collection>_runs` and events in
 
 Two questions for the review: *how long should bronze keep raw data?* It contains personal data exactly as delivered. And *who may read `datahub`?*
 
-[Sample: step 19](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/19-medallion-lineage) · Next: [What's next](./whats-next.md)
+## The catch
+
+Every record in this part went live the moment it arrived. A row in gold is an appointment, and an appointment gets a reminder. The next source isn't one we should trust that much.
+
+[Sample: step 16](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/16-medallion-lineage) · Next: [Flows](./flows.md)

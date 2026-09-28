@@ -62,16 +62,16 @@ const points = [
 const journey = [
   { step: '0', label: 'Hello World', to: '/docs/tutorial/hello-world' },
   { step: '2', label: 'Store data', to: '/docs/tutorial/store-appointments' },
-  { step: '3', label: 'Send SMS', to: '/docs/tutorial/confirm-by-sms' },
   { step: '4', label: 'Timers', to: '/docs/tutorial/send-reminders' },
   { step: '6', label: 'Queues', to: '/docs/tutorial/dont-block-booking' },
   { step: '7', label: 'Two services', to: '/docs/tutorial/notifications-service' },
-  { step: '8', label: 'Two processes', to: '/docs/tutorial/separate-processes' },
-  { step: '9', label: 'Health & metrics', to: '/docs/tutorial/operate-it' },
-  { step: '10', label: 'Entities', to: '/docs/tutorial/entities' },
-  { step: '11', label: 'Ontology', to: '/docs/tutorial/ontology' },
-  { step: '12', label: 'GraphQL', to: '/docs/tutorial/graphql' },
-  { step: '13', label: 'Admin API', to: '/docs/tutorial/admin-api' }
+  { step: '9', label: 'Ontology', to: '/docs/tutorial/ontology' },
+  { step: '10', label: 'GraphQL', to: '/docs/tutorial/graphql' },
+  { step: '13', label: 'Pipelines', to: '/docs/tutorial/pipelines' },
+  { step: '16', label: 'Lineage', to: '/docs/tutorial/medallion-and-lineage' },
+  { step: '17', label: 'Flows', to: '/docs/tutorial/flows' },
+  { step: '19', label: 'Admin API', to: '/docs/tutorial/admin-api' },
+  { step: '21', label: 'Discovery', to: '/docs/tutorial/discovery' }
 ];
 
 function Hero() {
@@ -134,7 +134,7 @@ export default function Home() {
 
         <section className={styles.section}>
           <div className="container">
-            <Heading as="h2" className={styles.center}>From Hello World to a generated GraphQL API</Heading>
+            <Heading as="h2" className={styles.center}>From Hello World to a data hub in several processes</Heading>
             <p className={styles.center}>
               One small app, one new concept per chapter. More and more chapters need no code changes, only YAML.
             </p>

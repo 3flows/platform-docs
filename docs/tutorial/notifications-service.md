@@ -79,7 +79,7 @@ mqs:
 ## What you learned
 
 - Services call each other with `service(name).method(...).input(...).call()`.
-- **That call doesn't care where the other service runs.** Keep that in mind for the next chapter.
+- **That call doesn't care where the other service runs.** Keep that in mind: [Part 5](./separate-processes.md) comes back to it.
 
 ## Reviewer's view
 
@@ -87,4 +87,4 @@ mqs:
 
 Each service is small enough to review on its own.
 
-[Sample: step 07](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/07-notifications-service) · Next: [Separate processes](./separate-processes.md)
+[Sample: step 07](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/07-notifications-service) · Next: [Part 2: Entities](./entities.md)

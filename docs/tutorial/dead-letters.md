@@ -1,8 +1,8 @@
 ---
-title: 18. Dead letters
+title: 15. Dead letters
 ---
 
-# 18. Dead letters
+# 15. Dead letters
 
 **Where we are:** three pipelines feed customers and appointments: CSV uploads, CRM messages and a nightly SQL sync.
 
@@ -79,7 +79,7 @@ handler('deadLetters', t.object({}).optional(), t.array(DeadLetter), async (_inp
 ## Run it
 
 ```sh
-npm run step:18
+npm run step:15
 curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
 # { …, "written": 4, "invalid": 2, "deadLettered": 2 }
 curl -X POST localhost:3000/data/deadLetters
@@ -136,4 +136,4 @@ A dead letter contains everything needed to reprocess it: the input exactly as t
 
 The review question: *who looks at the dead letters, and how often?* A dead-letter collection that nobody reads is just a slower way of skipping.
 
-[Sample: step 18](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/18-dead-letters) · Next: [Medallion layers and lineage](./medallion-and-lineage.md)
+[Sample: step 15](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/15-dead-letters) · Next: [Medallion layers and lineage](./medallion-and-lineage.md)

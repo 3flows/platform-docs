@@ -1,8 +1,8 @@
 ---
-title: 16. Pipelines
+title: 13. Pipelines
 ---
 
-# 16. Pipelines
+# 13. Pipelines
 
 **Where we are:** `DataExchangeService` imports the old system's CSV with transformers, and exports appointments as CSV.
 
@@ -47,17 +47,20 @@ export class CrmCustomersPipeline extends Pipeline {
 
 Read it top to bottom: *on* a trigger, *from* a source, through steps, *to* a sink. `fromLegacyRow` is the same mapping as in the last chapter. The import handler in `DataExchangeService` is gone. The export stays.
 
-A pipeline is a service, so YAML exposes it like one:
+A pipeline is a service. `pipelines.register` starts it, and YAML exposes its triggers like the routes of any other service:
 
 ```yaml title="platform.yml"
 services:
   - name: AppointmentsService
   - name: NotificationsService
   - name: DataExchangeService
-  # highlight-start
-  - name: AppointmentImportPipeline
-  - name: CrmCustomersPipeline
-  # highlight-end
+
+# highlight-start
+pipelines:
+  register:
+    - name: AppointmentImportPipeline
+    - name: CrmCustomersPipeline
+# highlight-end
 
 https:
   - name: api
@@ -84,7 +87,7 @@ mqs:
 ## Run it
 
 ```sh
-npm run step:16
+npm run step:13
 curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
 ```
 
@@ -110,7 +113,7 @@ A customer update from the CRM is a message on a queue:
 await mq().queue('crm-customers').send({ fullName: 'Ada King, Countess of Lovelace', phone: '+15550000001' });
 ```
 
-The phone number identifies Ada, so the pipeline updates her name. Her appointments stay attached, because her ID didn't change. That's the natural key from [chapter 14](./natural-keys.md) at work: **the import, the CRM and the booking API all agree on who Ada is, without knowing about each other.**
+The phone number identifies Ada, so the pipeline updates her name. Her appointments stay attached, because her ID didn't change. That's the natural key from [chapter 11](./natural-keys.md) at work: **the import, the CRM, GraphQL and the booking API all agree on who Ada is, without knowing about each other.**
 
 ## Building blocks
 
@@ -132,7 +135,7 @@ Pipelines are strict by default: an invalid record fails the whole run. Here, `o
 ## What you learned
 
 - **A pipeline is a declaration:** trigger, source, steps, sink. The platform does the streaming, batching, error handling and reporting.
-- **A pipeline is a service.** HTTP, queues and timers trigger it the same way they trigger any other route, and YAML decides where it's exposed.
+- **A pipeline is a service.** `pipelines.register` starts it. HTTP, queues and timers trigger it the same way they trigger any other route, and YAML decides where it's exposed.
 - Transformers and mappings don't change when they move into a pipeline.
 
 ## Reviewer's view
@@ -141,4 +144,4 @@ Pipelines are strict by default: an invalid record fails the whole run. Here, `o
 
 Each pipeline reads like its own summary. That's the point.
 
-[Sample: step 16](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/16-pipelines) · Next: [Sync from a database](./sync-from-a-database.md)
+[Sample: step 13](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/13-pipelines) · Next: [Sync from a database](./sync-from-a-database.md)
