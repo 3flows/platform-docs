@@ -54,7 +54,8 @@ const sidebars = {
           collapsed: false,
           items: [
             'tutorial/operate-it',
-            'tutorial/admin-api'
+            'tutorial/admin-api',
+            'tutorial/vaults'
           ]
         },
         {
@@ -109,6 +110,7 @@ const sidebars = {
         'configuration/entities',
         'configuration/graphqls',
         'configuration/sqls',
+        'configuration/vaults',
         'configuration/pipelines-and-flows',
         'configuration/admins',
         'configuration/mqs',

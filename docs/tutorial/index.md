@@ -6,7 +6,7 @@ slug: /tutorial
 
 # Build an appointment reminder app
 
-In this tutorial you build a small but real application: customers book appointments, get a confirmation by SMS, and receive a reminder 24 hours before their appointment. Then you give it a domain model and a generated GraphQL API. It becomes a small data hub that imports, syncs and reviews data through pipelines and flows. Finally, you operate it and split it across processes.
+In this tutorial you build a small but real application: customers book appointments, get a confirmation by SMS, and receive a reminder 24 hours before their appointment. Then you give it a domain model and a generated GraphQL API. It becomes a small data hub that imports, syncs and reviews data through pipelines and flows. Finally, you operate it, move its secrets into a vault and split it across processes.
 
 You start with Hello World and add **one concept per chapter**. Every chapter follows the same pattern:
 
@@ -68,6 +68,7 @@ Before it goes to production, operations wants to look inside.
 |---|---|---|
 | [18. Operate it](./operate-it.md) | Is it alive? What does the API look like? | `/ping`, `/health`, `/metrics`, OpenAPI, JSON-RPC |
 | [19. Admin API](./admin-api.md) | What is actually running? | Admin / control-plane API |
+| [20. Keep secrets in a vault](./vaults.md) | Production needs real credentials, but not in YAML | `vaults` and `$vault` references |
 
 ### Part 5: Scale it
 
@@ -75,14 +76,14 @@ The same code, in more than one process.
 
 | Chapter | Problem | Concept |
 |---|---|---|
-| [20. Separate processes](./separate-processes.md) | Notifications should run on their own | `remotes` |
-| [21. Discovery](./discovery.md) | Every caller hardcodes where notifications live | `registries` and `discovery` |
+| [21. Separate processes](./separate-processes.md) | Notifications should run on their own | `remotes` |
+| [22. Discovery](./discovery.md) | Every caller hardcodes where notifications live | `registries` and `discovery` |
 
 Watch for one recurring theme: more and more chapters need **no code changes at all**. Only YAML changes. In Part 3, the code that remains is mostly declarations: a key, a mapping, a pipeline, a flow. Parts 4 and 5 change no application code at all.
 
 ## The samples
 
-Every chapter has a complete, tested project in the [platform-samples](https://github.com/3flows/platform-samples/tree/main/appointment-reminders) repository. All steps use in-memory providers, so you need no database, message broker or SMS account.
+Every chapter has a complete, tested project in the [platform-samples](https://github.com/3flows/platform-samples/tree/main/appointment-reminders) repository. All steps use in-memory providers, so you need no database, message broker, SMS account or vault.
 
 Requirements: access to the 3flows repositories, a GitHub token with `read:packages` for the platform package, and Node.js 24+ with Corepack. The [setup page](./setup.md) explains all three.
 

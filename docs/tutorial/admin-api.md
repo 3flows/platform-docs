@@ -82,6 +82,7 @@ curl localhost:3000/admin/api/entities
 
 - The admin API is **disabled** unless `enabled: true`.
 - It's **read-only** by default. Reload must be enabled explicitly.
+- Secrets are redacted: keys like `password`, `token` or `connectionString` show `[REDACTED]`. The [next chapter](./vaults.md) takes them out of the configuration altogether.
 - It's a JSON API. Consoles and tools build on top of it.
 
 ## What you learned
@@ -95,4 +96,4 @@ curl localhost:3000/admin/api/entities
 
 Check that it's protected or internal before it goes to production.
 
-[Sample: step 19](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/19-admin) · Next: [Part 5: Separate processes](./separate-processes.md)
+[Sample: step 19](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/19-admin) · Next: [Keep secrets in a vault](./vaults.md)

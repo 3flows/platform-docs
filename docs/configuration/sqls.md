@@ -27,11 +27,12 @@ sqls:
   - name: practice
     type: postgres
     parameters:
-      connectionString: postgres://reader:secret@practice-db:5432/practice
+      connectionString:
+        $vault: { path: practice-database, key: connectionString }
       schema: public
       maxPoolSize: 20
 ```
 
-Instead of `connectionString`, `host`, `port`, `database`, `user` and `password` can be given separately. `ssl` is passed to the driver.
+Instead of `connectionString`, `host`, `port`, `database`, `user` and `password` can be given separately. `ssl` is passed to the driver. Take credentials from a [vault](./vaults.md), never from the YAML itself.
 
 The `memory` backend needs no parameters and starts empty, which makes it a good fit for development and tests.

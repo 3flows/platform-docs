@@ -40,6 +40,7 @@ A typical distributed setup has:
 - Use coordinators for singleton timers and polling workloads.
 - Use idempotency for asynchronous triggers such as MQ, email, SMS, and webhooks.
 - Prefer durable/shared idempotency and coordination backends when available.
+- Keep secrets in a [vault](../configuration/vaults.md) and reference them with `$vault`. Give each process its own vault identity, and reference only the secrets it uses.
 
 
 ## Public docs deployment

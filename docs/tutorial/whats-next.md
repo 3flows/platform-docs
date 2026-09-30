@@ -16,7 +16,8 @@ You built an appointment reminder app with:
 - dead letters for bad records, bronze, silver and gold layers, and lineage for every run
 - a flow that waits for reception before referred patients are booked
 - built-in health, metrics, API descriptions and an admin API
-- two processes that find each other through a registry, with no code changes needed to split them
+- secrets in a vault, referenced from YAML and never shown by the platform
+- two processes that find each other through a registry, each with only the secrets it needs, with no code changes needed to split them
 
 And every piece used a handful of primitives that both humans and agents can read.
 
@@ -28,7 +29,7 @@ Running more than one instance of the same process raises new questions. These c
 
 - **Scaling out:** run two appointments instances without sending every reminder twice. Covers coordinators and singleton timers.
 - **Duplicate safety:** SMS providers and message brokers retry, so the platform needs to skip events it has already handled. Covers idempotency.
-- **Going to production:** replace memory providers with MongoDB, Redis, RabbitMQ, PostgreSQL and Twilio, and enable strict mode.
+- **Going to production:** replace memory providers with MongoDB, Redis, RabbitMQ, PostgreSQL and Twilio, take their credentials from HashiCorp Vault or Azure Key Vault, and enable strict mode.
 
 Until then, the [guides](../guides/distributed-platform.md) already describe these features.
 

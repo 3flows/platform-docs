@@ -1,8 +1,8 @@
 ---
-title: 21. Discovery
+title: 22. Discovery
 ---
 
-# 21. Discovery
+# 22. Discovery
 
 **Where we are:** appointments and notifications run in two processes. `appointments.yml` has a `remotes` entry with the URL of the notifications process.
 
@@ -14,7 +14,7 @@ The only process that really knows where notifications runs is notifications its
 
 Turn it around. **Services say where they are, and callers look them up.** The platform calls the place where that happens a registry.
 
-Application code doesn't change, again. The sample checks that every `.ts` file is still identical to [chapter 19](./admin-api.md).
+Application code doesn't change, again. The sample checks that every `.ts` file is still identical to [chapter 20](./vaults.md).
 
 **The registry:** a third, small process. In the sample, it keeps registrations in memory.
 
@@ -32,7 +32,7 @@ registries:
 **Notifications registers itself:**
 
 ```yaml title="notifications.yml"
-# … services, https, smss and mqs unchanged
+# … services, https, vaults, smss and mqs unchanged
 
 # highlight-start
 # Where the registry is.
@@ -80,9 +80,9 @@ When the app calls `service('NotificationsService')`, the platform now looks in 
 ## Run it
 
 ```sh
-yarn step:21:registry        # terminal 1
-yarn step:21:notifications   # terminal 2
-yarn step:21:appointments    # terminal 3
+yarn step:22:registry        # terminal 1
+yarn step:22:notifications   # terminal 2
+yarn step:22:appointments    # terminal 3
 ```
 
 Ask the registry what it knows:
@@ -143,4 +143,4 @@ runtime:
 
 The review questions move to operations: *what happens when the registry is down?* Calls are resolved through the registry every time, so every call to a service in another process fails until it's back. Run it like the infrastructure it now is. And *who may register?* Anything that can reach the registry can claim to be `NotificationsService`, so keep it on an internal network.
 
-[Sample: step 21](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/21-discovery) · Next: [What's next](./whats-next.md)
+[Sample: step 22](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/22-discovery) · Next: [What's next](./whats-next.md)

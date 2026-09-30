@@ -50,6 +50,8 @@ docs:
 
 The service code stays exactly the same. PostgreSQL works the same way.
 
+A connection string with a password in it is a secret. For now it comes from an environment variable; [chapter 20](./vaults.md) takes it from a vault instead.
+
 ## What you learned
 
 - **Infrastructure comes from configuration, not from code.**
