@@ -106,10 +106,10 @@ curl localhost:3000/health
 
 Booking answers `200` without waiting, and the server stays up. Book Ada, and her confirmation arrives as before.
 
-What happens to Bob's message depends on the broker, and that's the point: it's the queue's problem now, not the booking request's. With `type: rabbitmq` or `type: azure` (Service Bus), a message whose route fails is redelivered, and survives a restart of your process. Same code.
+The failure is now the queue's problem, not the booking request's. That's the point of the change: the API stays up, and the customer gets an answer.
 
-:::caution
-The `memory` queue is for development. A message whose route fails is simply dropped, without a log line. Don't rely on it to show you failures. [Dead letters](./dead-letters.md) in Part 3 and the [Slack connector](./slack.md) in Part 4 show how the platform keeps failed records instead.
+:::caution Known gap
+Today, a queue route that throws **loses the message silently, on every broker**. The handler's error is caught before it reaches the broker, so RabbitMQ acknowledges the message and Service Bus completes it, and nothing is logged. Until that's fixed, keep queue routes small, and make anything that must not be lost go through a mechanism that keeps failures: [dead letters](./dead-letters.md) for pipelines in Part 3, and retries with a dead-letter queue for connector events in [Part 4](./slack.md).
 :::
 
 ## What you learned
