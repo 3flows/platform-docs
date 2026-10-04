@@ -64,7 +64,7 @@ sqls:
 How references are resolved:
 
 - **Vaults start first.** Then every `$vault` reference is replaced, and only then does anything else start. Services and providers see plain values.
-- **Resolved once.** References are resolved at startup and on every reload that changes the configuration. A reload with unchanged YAML does nothing, so a rotated secret needs a restart. Code that must see rotations reads the secret with `vault()` when it needs it.
+- **Resolved on load.** References are resolved at startup and on every reload. A configuration with `$vault` references is reloaded even if the YAML didn't change, so `Platform.reload()` picks up rotated secrets. The reload restarts the configured services. `runtime.configuration.refresh.vaults` (`enabled: true`, `interval: 15m`) reloads on a schedule. Code that must see rotations without a reload reads the secret with `vault()` when it needs it.
 - **Fail fast.** A missing secret, key or vault stops the platform from starting. If a reload fails, the previous configuration keeps running.
 - **Redacted.** Resolved values are replaced with `[REDACTED]` wherever the platform shows its configuration, for example in the [admin API](./admins.md). So are keys that look like secrets: `password`, `token`, `secret`, `apiKey`, `connectionString`, `credential`, `privateKey` and similar ones.
 

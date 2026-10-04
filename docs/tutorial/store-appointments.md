@@ -4,13 +4,37 @@ title: 2. Store appointments
 
 # 2. Store appointments
 
-**Where we are:** we can book and list appointments, but they live in an array.
+**Where we are:** `bookAppointment` and `listAppointments` with contracts. Appointments live in `this.appointments`, an array.
 
-**The problem:** the data disappears on restart and isn't shared between instances.
+**What we want:** appointments that are still there tomorrow.
 
-## The solution: `docs`
+## The obvious way
 
-Appointments are documents, so we use the `docs` primitive. The `appointments` array goes away. Both handlers use `docs` instead:
+That's the array from the last chapter. It's the obvious way to keep data in any Node.js service, and it works as long as the process runs.
+
+## Where it breaks
+
+```sh
+yarn step:01
+curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
+  -d '{"name":"Ada","phone":"+15550000001","at":"2030-01-01T10:00:00Z"}'
+curl -X POST localhost:3000/listAppointments    # [ { "name": "Ada", … } ]
+```
+
+Stop it with Ctrl+C, start it again and list:
+
+```sh
+yarn step:01
+curl -X POST localhost:3000/listAppointments    # []
+```
+
+Ada's appointment is gone. Every deployment, crash and autoscaling event loses data, and two instances behind a load balancer each have their own list: book on one, list on the other, and it's not there.
+
+The obvious fix is a database driver: `npm install mongodb`, a connection string, a client, connection handling, and a mock for the tests. That puts infrastructure into the service, and every service does it slightly differently.
+
+## The concept: `docs`
+
+Appointments are documents, so we use the platform's `docs` primitive. The array goes away. Both handlers use `docs` instead:
 
 ```ts title="services.ts"
 handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
@@ -36,26 +60,42 @@ docs:
     type: memory
 ```
 
-## Swap the database without touching code
+`trigger.context` is how a handler reaches infrastructure: `doc()`, `kv()`, `blob()`, `mq()`, `sms()`, `sql()`, `vault()` and more. Which implementation is behind it is configuration.
 
-`memory` is ideal for development and tests. For production, change the YAML:
+## Run it again
 
-```yaml
+With `type: memory`, the store lives in the process, too, so a restart still empties it. That's what you want in development and tests: every run starts clean, and there's nothing to install.
+
+The difference is that the data no longer lives in **your service**. Change one line of YAML and it lives in MongoDB:
+
+```yaml title="platform.yml"
 docs:
   - name: DEFAULT
+    # highlight-start
     type: mongo
     parameters:
       connectionString: ${{ MONGO_URL }}
+    # highlight-end
 ```
 
-The service code stays exactly the same. PostgreSQL works the same way.
+If you have Docker, try it:
 
-A connection string with a password in it is a secret. For now it comes from an environment variable; [chapter 20](./vaults.md) takes it from a vault instead.
+```sh
+docker run -d -p 27017:27017 mongo
+export MONGO_URL=mongodb://localhost:27017
+yarn step:02
+# book Ada, stop, start again:
+curl -X POST localhost:3000/listAppointments    # [ { "name": "Ada", … } ]
+```
+
+Ada survives the restart, and a second instance with the same YAML sees her too. The service code didn't change. PostgreSQL works the same way, with `type: postgres`.
+
+A connection string with a password in it is a secret. For now it comes from an environment variable; [chapter 23](./vaults.md) takes it from a vault instead.
 
 ## What you learned
 
-- **Infrastructure comes from configuration, not from code.**
-- Services reach infrastructure through `trigger.context`: `doc()`, `kv()`, `blob()`, `mq()`, `sms()` and more.
+- **Infrastructure comes from configuration, not from code.** The service says *"store this document"*. YAML says where.
+- `memory` providers make development and tests free of setup. Production providers are a YAML change.
 
 ## Reviewer's view
 

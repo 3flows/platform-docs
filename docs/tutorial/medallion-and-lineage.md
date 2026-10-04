@@ -1,19 +1,25 @@
 ---
-title: 16. Medallion layers and lineage
+title: 18. Medallion layers and lineage
 ---
 
-# 16. Medallion layers and lineage
+# 18. Medallion layers and lineage
 
 **Where we are:** three pipelines feed the domain model. Records that can't be processed become dead letters.
 
-**The problem:** two questions come up as soon as data arrives from several places:
+**What we want:** answers to two questions that come up as soon as data arrives from several places.
 
-- *"We found a bug in the phone number cleanup. Can we re-run last month's imports?"* No. The rows are gone. Only the result of the old mapping is left.
-- *"Where do our customers come from?"* The data can't tell. A customer looks the same whether it was booked, imported, synced or sent by the CRM.
+## The obvious way
+
+That's what we have: every pipeline maps its source straight into the model. The CSV row becomes a customer and an appointment in one step, `fromLegacyRow`, and the row itself is gone.
+
+## Where it breaks
+
+- *"We found a bug in the phone number cleanup. Can we re-run last month's imports?"* No. The rows are gone. Only the result of the old mapping is left, and the practice won't send last month's files again.
+- *"Where do our customers come from?"* The data can't tell. A customer looks the same whether it was booked, imported, synced or sent by the CRM. The obvious fix, a `source` field on every entity, is one more thing every pipeline has to remember to set, and it still doesn't say *which run*.
 
 We need to **keep data at each stage** of its way in, and **record what every pipeline read and wrote.**
 
-## The solution: bronze, silver, gold, and lineage
+## The concept: bronze, silver, gold, and lineage
 
 The medallion pattern gives each stage a name:
 
@@ -23,7 +29,7 @@ The medallion pattern gives each stage a name:
 | **Silver** | Cleaned data: consistent names, formats and types | `{ name, phone, at }` |
 | **Gold** | The domain model | `Customer` and `Appointment` entities |
 
-The mapping splits into two parts. Cleaning moves to a `map` step, and the clean rows use the field names of the ontology, so auto mapping does the rest:
+The mapping splits into two parts. Cleaning moves to a `map` step, and the clean rows use the field names of the domain, so auto mapping does the rest:
 
 ```ts title="legacy.ts"
 /** Bronze → silver: rename columns, normalize phone numbers and dates, drop the notes. */
@@ -33,7 +39,7 @@ export const cleanLegacyRow = (row: LegacyRow): CleanRow => ({
     at: toIsoDate(row.Date)
 });
 
-/** Silver → gold: clean rows map onto the ontology by name. Only the relationship is explicit. */
+/** Silver → gold: clean rows map onto the domain by name. Only the relationship is explicit. */
 export const fromCleanRow: EntityTarget<CleanRow>[] = [
     { entity: Customers },
     { entity: Appointments, fields: { customer: ref(Customers) } }
@@ -70,10 +76,10 @@ return this.pipeline('appointment-import')
 
 **No YAML changes.**
 
-## Run it
+## Run it again
 
 ```sh
-yarn step:16
+yarn step:18
 curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
 curl -X POST localhost:3000/data/syncs/practice
 ```
@@ -146,4 +152,4 @@ Two questions for the review: *how long should bronze keep raw data?* It contain
 
 Every record in this part went live the moment it arrived. A row in gold is an appointment, and an appointment gets a reminder. The next source isn't one we should trust that much.
 
-[Sample: step 16](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/16-medallion-lineage) · Next: [Flows](./flows.md)
+[Sample: step 18](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/18-medallion-lineage) · Next: [Flows](./flows.md)

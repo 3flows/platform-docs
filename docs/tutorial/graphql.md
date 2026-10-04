@@ -4,27 +4,49 @@ title: 10. GraphQL
 
 # 10. GraphQL
 
-**Where we are:** the domain is described by an ontology.
+**Where we are:** the model is one `Scheduling` domain.
 
-**The problem:** the front-end team is building a customer dashboard. They want *customers with their appointments*, *appointments with their customer*, sorting, filtering and paging. Writing a handler for each combination doesn't scale.
+**What we want:** the front-end team is building a customer dashboard. They want *customers with their appointments*, *appointments with their customer*, sorting, filtering and paging.
 
-## The solution: generate GraphQL from the ontology
+## The obvious way
+
+A handler per screen:
+
+```ts
+handler('customersWithAppointments', t.object({ sort: t.string().optional(), first: t.number().optional() }), t.array(CustomerWithAppointments), …),
+handler('appointmentsWithCustomer', …),
+handler('customerByPhone', …),
+```
+
+Each is a few lines, and the first screen ships.
+
+## Where it breaks
+
+The second screen wants the same customers without appointments, the third wants them filtered by name, and the mobile app wants only the next appointment. Every combination is a new handler, a new output schema and a new review, and the handlers slowly drift from the model they're supposed to show. The model already knows everything these handlers encode: which entities exist, their fields, and how they're related.
+
+## The concept: GraphQL generated from the domain
 
 YAML only:
 
 ```yaml title="platform.yml"
-# GraphQL on the same HTTP server: generated from the ontology, plus the service handlers.
+# GraphQL on the same HTTP server: generated from the domain, plus the service handlers.
 graphqls:
   - name: graphql
     useHttp: api
     path: /graphql
-    ontologies:
-      - AppointmentsOntology
+    domains:
+      - Scheduling
     services:
       - name: AppointmentsService
 ```
 
-That's a complete GraphQL API, including the relationship in both directions:
+## Run it
+
+```sh
+yarn step:10
+```
+
+That's a complete GraphQL API at `http://localhost:3000/graphql`, including the relationship in both directions:
 
 ```graphql
 {
@@ -82,12 +104,12 @@ GraphQL can also run on its own port (`port` instead of `useHttp`), with `playgr
 
 ## What you learned
 
-- **One ontology, many views:** entities in code, an API in GraphQL, a description for tools and reviewers.
-- The GraphQL schema is generated, so it can't drift from the model.
+- **One domain, many views:** entities in code, an API in GraphQL, and soon a description for people and agents.
+- The GraphQL schema is generated, so it can't drift from the model. New screens need queries, not handlers.
 
 ## Reviewer's view
 
-> No code changes. A generated GraphQL endpoint at `/graphql` for the `AppointmentsOntology` and the handlers of `AppointmentsService`.
+> No code changes. A generated GraphQL endpoint at `/graphql` for the `Scheduling` domain and the handlers of `AppointmentsService`.
 
 The review question is about exposure, not implementation: *should these entities be readable and writable through GraphQL, and by whom?* That's where `auth` comes in.
 

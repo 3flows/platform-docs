@@ -51,6 +51,8 @@ That changes what the platform is for. **The platform is written for the human w
 
 If you know the platform primitives, you can read code produced by an agent and understand what it does. `docs`, `blobs`, `kv`, `mq`, `sms` and timers give humans and agents a small, shared vocabulary for the fundamentals. The agent writes the code. The human reads it, reviews it, and takes responsibility for it.
 
+The vocabulary goes beyond infrastructure. Every handler has an enforced **contract**. A **domain** describes the business in its own words, and an **ontology** publishes what those words mean. An **MCP** server gives an agent exactly the operations a human chose, and the running platform **describes itself**: what's running, with which contracts, providers and connectors. That's what agents need to work on a system safely, and what humans need to check that they did.
+
 ## Production-hardened implementations
 
 Every implementation behind a primitive has to earn its place. Once an implementation, for example MongoDB for `docs`, has gone the full road to production with our customers, including hardening, penetration testing and security reviews, it gives us a solid basis to take responsibility for it again in the next project.
@@ -61,4 +63,4 @@ Scaling out implementations becomes much easier with agents. The next `docs` bac
 
 We still need this abstraction layer, and we will keep working on the 3flows Platform. Not because we built it, but because it lets humans stay responsible for systems that agents help build.
 
-**See it for yourself:** the [tutorial](./tutorial/index.md) builds an appointment reminder app from Hello World to a small data hub in cooperating processes, one small step at a time.
+**See it for yourself:** the [tutorial](./tutorial/index.md) builds an appointment reminder app from Hello World to a small data hub in cooperating processes, one small step at a time. Every step starts with the obvious solution, shows where it breaks, and introduces the platform concept that fixes it.

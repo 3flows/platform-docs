@@ -1,18 +1,42 @@
 ---
-title: 15. Dead letters
+title: 17. Dead letters
 ---
 
-# 15. Dead letters
+# 17. Dead letters
 
 **Where we are:** three pipelines feed customers and appointments: CSV uploads, CRM messages and a nightly SQL sync.
 
-**The problem:** the import skips invalid rows. The report says `"invalid": 2`, but not *which* rows, or *why*. The practice asks: *"Two of my appointments are missing. Which ones?"* We can't answer.
+**What we want:** bad records shouldn't vanish, and they shouldn't stop everything else.
 
-The CRM pipeline is worse. It still has the strict default, so a single message without a phone number fails the run. Depending on the broker, the message is then lost, or redelivered and failing again and again.
+## The obvious way
+
+That's what the import does today: `.onError('entity').skip()`. A broken row is dropped and counted, and the rest of the file goes in.
+
+## Where it breaks
+
+Upload a file with two broken rows, one without a phone number and one with the date `someday`:
+
+```text title="legacy.csv"
+Name;Mobile;Date;Notes
+Ada Lovelace;+1 555 000 0001;2030-01-15 10:00;first visit
+Grace Hopper;+1 555 000 0002;2030-01-16 09:30;
+No Phone;;2030-01-16 11:00;
+Bad Date;+1 555 000 0004;someday;
+```
+
+```sh
+yarn step:16
+curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
+# { …, "written": 4, "invalid": 2 }
+```
+
+A week later, the practice calls: *"Two of my appointments are missing. Which ones?"* The report says `"invalid": 2`, but not *which* rows, or *why*. We can't answer.
+
+The CRM pipeline is worse. It still has the strict default, so a single message without a phone number fails the run. Depending on the broker, the message is then lost, or redelivered and failing again and again, holding up every update behind it.
 
 Skipping loses data silently. Failing stops everything for one bad record. We need a third option.
 
-## The solution: dead letters
+## The concept: dead letters
 
 A dead letter is a record a pipeline couldn't process, **kept with its input and the error**, so someone can look at it, fix the source and send it again.
 
@@ -76,10 +100,10 @@ handler('deadLetters', t.object({}).optional(), t.array(DeadLetter), async (_inp
 
 **No YAML changes.** Dead letters use the `docs` store that's already there.
 
-## Run it
+## Run it again
 
 ```sh
-yarn step:15
+yarn step:17
 curl -X POST localhost:3000/data/imports/appointments -H 'Content-Type: text/csv' --data-binary @legacy.csv
 # { …, "written": 4, "invalid": 2, "deadLettered": 2 }
 curl -X POST localhost:3000/data/deadLetters
@@ -136,4 +160,4 @@ A dead letter contains everything needed to reprocess it: the input exactly as t
 
 The review question: *who looks at the dead letters, and how often?* A dead-letter collection that nobody reads is just a slower way of skipping.
 
-[Sample: step 15](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/15-dead-letters) · Next: [Medallion layers and lineage](./medallion-and-lineage.md)
+[Sample: step 17](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/17-dead-letters) · Next: [Medallion layers and lineage](./medallion-and-lineage.md)

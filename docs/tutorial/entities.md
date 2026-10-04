@@ -6,14 +6,34 @@ title: 8. Entities
 
 **Where we are:** the app from Part 1. `AppointmentsService` and `NotificationsService` run in one process, and appointments are raw documents in `docs`: `{ id, name, phone, at }`. Part 2 gives this data a shape.
 
-**The problem:** raw documents get us surprisingly far, but the domain is starting to show:
+**What we want:** customers as a thing of their own. Ada books every month; she should be one customer with many appointments.
 
-- Ada books twice, and her name and phone number are now stored twice. **Customers are a thing of their own.**
-- Nothing validates what's written to the store.
-- There are no creation or update timestamps.
-- Nothing connects an appointment to its customer.
+## The obvious way
 
-## The solution: entities
+Keep doing what works: every appointment document carries the customer's name and phone number. To find Ada's appointments, filter by phone.
+
+```ts
+const adas = await doc().collection('appointments').find({ phone: '+15550000001' }).all();
+```
+
+## Where it breaks
+
+Book Ada twice and look at what's stored:
+
+```sh
+yarn step:07
+curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
+  -d '{"name":"Ada","phone":"+15550000001","at":"2030-01-01T10:00:00Z"}'
+curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
+  -d '{"name":"Ada Lovelace","phone":"+15550000001","at":"2030-02-01T10:00:00Z"}'
+curl -X POST localhost:3000/listAppointments
+```
+
+Two documents, two names for the same person. Which one is right? When Ada changes her number, every one of her appointments has to be found and rewritten. And `docs` stores whatever it's given: a bug that writes `{ nme: 'Ada' }` is stored just as happily. There are no creation or update timestamps either.
+
+The domain is showing: **a customer is not a field of an appointment.**
+
+## The concept: entities
 
 An entity is a schema plus persistence: validated data with an ID, `created` and `updated` timestamps, and references to other entities.
 
@@ -68,7 +88,7 @@ handler('bookAppointment', BookAppointment, Appointment, async ({ name, phone, a
 }),
 ```
 
-The public API, meaning the handler schemas, stays the same. `NotificationsService` is untouched.
+The public API, meaning the handler contracts, stays the same. `NotificationsService` is untouched.
 
 ```yaml title="platform.yml"
 docs:
@@ -84,6 +104,19 @@ entities:
     - name: Customer
     - name: Appointment
 # highlight-end
+```
+
+## Run it again
+
+```sh
+yarn step:08
+# book Ada twice, as above
+```
+
+There's one customer with two appointments. An invalid customer is refused before it reaches the store:
+
+```ts
+await Customers.create({ name: 'No phone' } as any); // throws: phone is required
 ```
 
 ## The entity API
@@ -110,4 +143,4 @@ Entities validate on every `create` and `save`. Invalid data never reaches the s
 
 > Two entities with a reference from `Appointment` to `Customer`. Booking finds or creates the customer by phone number. The API contract is unchanged.
 
-[Sample: step 08](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/08-entities) · Next: [Ontology](./ontology.md)
+[Sample: step 08](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/08-entities) · Next: [One domain](./domain.md)

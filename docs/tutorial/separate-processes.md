@@ -1,14 +1,30 @@
 ---
-title: 21. Separate processes
+title: 24. Separate processes
 ---
 
-# 21. Separate processes
+# 24. Separate processes
 
-**Where we are:** the complete app runs in one process: booking, reminders, GraphQL, the data hub, the referral flow and the notifications that all of them send. Its secrets come from a vault.
+**Where we are:** the complete app runs in one process: booking, reminders, GraphQL, the MCP server, the data hub, the referral flow, the Slack connector and the notifications that all of them send. Its secrets come from a vault.
 
-**The problem:** notifications should be deployed and scaled independently. A nightly import that makes 800 appointments due shouldn't slow down booking. And the Twilio credentials from the [last chapter](./vaults.md) should be readable by one process only, not by the process that also parses CSV uploads from partners.
+**What we want:** notifications deployed and scaled on their own. A nightly import that makes 800 appointments due shouldn't slow down booking. And the Twilio credentials from the [last chapter](./vaults.md) should be readable by one process only, not by the process that also parses CSV uploads from partners.
 
-## The solution: change YAML, not code
+## The obvious way
+
+Run notifications as a second app, and replace every call to it with an HTTP request:
+
+```ts
+await fetch(`${process.env.NOTIFICATIONS_URL}/sendReminder`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(appointment)
+});
+```
+
+## Where it breaks
+
+Count the call sites: the booking handler, the reminder run, and the `notify-practice` step of the referral flow, which isn't even a function call but a declaration, `.call('NotificationsService')`. Each needs the URL, error handling, a timeout, and its own idea of what a failed response looks like. Every test that ran in one process now needs two. And the decision *"notifications runs elsewhere"*, an operations decision, has become a code change in three places that a reviewer has to check one by one.
+
+## The concept: change YAML, not code
 
 Every `.ts` file is **identical** to the previous chapter. The sample repository even checks this.
 
@@ -18,7 +34,7 @@ Back in [chapter 7](./notifications-service.md), every part of the app learned t
 await service('NotificationsService').method('appointmentBooked').input(appointment).call();
 ```
 
-That's the booking handler, the reminder timer and both steps of the referral flow. None of them know where `NotificationsService` runs. So only the configuration is split in two.
+That's the booking handler, the reminder timer and the `notify-practice` step of the referral flow. None of them know where `NotificationsService` runs. So only the configuration is split in two.
 
 **Notifications process:** exposes its handlers on port 3001, and owns SMS, the Twilio secret and the confirmations queue.
 
@@ -76,10 +92,11 @@ services:
   - name: DataExchangeService
   - name: ReceptionService
 
-# … pipelines, flows, https, docs, entities, sqls and kvs unchanged
+# … pipelines, flows, https (with the slack server), docs, entities, sqls, kvs, graphqls, admins,
+# ontologies, mcps and connectors unchanged
 
 # highlight-start
-# Where secrets come from. This process only gets the secrets it uses: the partner database.
+# Where secrets come from. This process only gets the secrets it uses: the partner database and Slack.
 vaults:
   - name: DEFAULT
     type: memory
@@ -88,6 +105,9 @@ vaults:
       secrets:
         practice-database:
           connectionString: postgres://reader:dev-password@localhost:5432/practice
+        slack-reception:
+          botToken: xoxb-dev-token
+          signingSecret: dev-signing-secret
 # highlight-end
 
 # highlight-start
@@ -105,6 +125,7 @@ mqs:
     use:
       # highlight-next-line
       - CrmCustomersPipeline # the confirmations queue moved with NotificationsService
+      - ReceptionService # Slack events are delivered to its connector routes through a queue
 ```
 
 When the app calls `service('NotificationsService')`, the platform looks for the service in this order:
@@ -115,8 +136,8 @@ When the app calls `service('NotificationsService')`, the platform looks for the
 ## Run it
 
 ```sh
-yarn step:21:notifications   # terminal 1
-yarn step:21:appointments    # terminal 2
+yarn step:24:notifications   # terminal 1
+yarn step:24:appointments    # terminal 2
 
 curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
   -d '{"name":"Ada","phone":"+15550000001","at":"2030-01-01T10:00:00Z"}'
@@ -129,7 +150,7 @@ curl -X POST localhost:3001/.jsonrpc -H 'Content-Type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"outbox"}'
 ```
 
-Send a referral batch as in [chapter 17](./flows.md): the flow in terminal 2 notifies reception through terminal 1. The flow doesn't notice the difference, and its report looks the same.
+Send a referral batch as in [chapter 20](./slack.md) and react in Slack: the flow in terminal 2 tells the practice through terminal 1. The flow doesn't notice the difference, and its report looks the same.
 
 ## What you learned
 
@@ -149,4 +170,6 @@ This is the smallest possible review for a significant architectural change.
 
 `appointments.yml` now contains the address of the notifications process. When notifications moves to another host or port, the appointments process has to be reconfigured and redeployed. And every new process that sends notifications repeats the same URL.
 
-[Sample: step 21](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/21-separate-processes) · Next: [Discovery](./discovery.md)
+There's a second catch, which [chapter 26](./workload-identity.md) deals with: port 3001 now answers anybody.
+
+[Sample: step 24](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/24-separate-processes) · Next: [Discovery](./discovery.md)

@@ -1,12 +1,12 @@
 ---
-title: 17. Flows
+title: 19. Flows
 ---
 
-# 17. Flows
+# 19. Flows
 
 **Where we are:** data arrives through the booking API, GraphQL, CSV uploads, CRM messages and a nightly SQL sync. Pipelines turn it into customers and appointments, keep dead letters and record lineage.
 
-**The problem:** the partner practice from [chapter 14](./sync-from-a-database.md) now wants to **refer patients** to us. When they can't take a patient, they send a batch:
+**What we want:** the partner practice from [chapter 16](./sync-from-a-database.md) now wants to **refer patients** to us. When they can't take a patient, they send a batch:
 
 ```json title="referrals.json"
 {
@@ -24,15 +24,26 @@ Every record so far went live the moment it arrived. Reception says no to that h
 
 That's a process with four steps: **tell reception, wait for the decision, import if accepted, tell the practice.**
 
-Try to build it with what we have:
+## The obvious way
 
-- A handler can't wait two days for an answer.
-- A pipeline streams records from a source to a sink in one go. There's no *"wait for reception"* step in the middle.
-- So it becomes two handlers, a "pending batch" document with a `status` field, and questions nobody can answer by reading the code: *Did the SMS to reception go out, or did it fail halfway? Was this batch already reviewed? What if the answer comes a week later?*
+A handler can't wait two days, and a pipeline streams from source to sink in one go. So it becomes two handlers and a document:
 
-The process exists, but only as a status field and the code around it. What we want to write down is the process itself: its steps in order, what may be retried, and where it waits.
+- `receiveReferrals` stores the batch as `{ status: 'pending', … }` and texts reception.
+- `reviewReferrals` loads the batch, checks `status === 'pending'`, imports it if accepted, texts the practice and sets `status: 'done'`.
 
-## The solution: a flow
+It works on the first try.
+
+## Where it breaks
+
+Ask the questions operations will ask:
+
+- The SMS to reception failed. Was the batch stored anyway? Does anybody know it's waiting?
+- `reviewReferrals` crashed after the import, before the SMS to the practice. The status still says `pending`. Review it again, and the batch is imported twice, or not, depending on which line it got to.
+- What if the answer comes a week later? What if two people review at the same moment?
+
+None of that is visible in the code. The process exists, but only as a status field and the code around it, spread over two handlers. What we want to write down is the process itself: its steps in order, what may be retried, and where it waits.
+
+## The concept: a flow
 
 A flow is a service that declares a process: triggers, steps and what happens between them. The platform runs it, records every step and keeps the run while it waits.
 
@@ -82,7 +93,7 @@ export class ReferralFlow extends Flow {
 }
 ```
 
-Read it top to bottom: it's the process from the problem statement, in the same order. The helpers are small:
+Read it top to bottom: it's the process from above, in the same order. The helpers are small:
 
 ```ts title="flows.ts"
 /** What reception decided. It arrives later, when the flow is resumed. */
@@ -203,7 +214,7 @@ https:
 ## Run it
 
 ```sh
-yarn step:17
+yarn step:19
 curl -X POST localhost:3000/data/flows/referrals -H 'Content-Type: application/json' -d @referrals.json
 ```
 
@@ -315,6 +326,10 @@ They work together: a flow step can run a pipeline, and keeps its report.
 
 > A referral batch notifies reception and waits up to three days for a review. Only an accepted batch is imported, through `referral-import`. Referrals without a valid phone number become dead letters. The practice is told either way. `reviewReferrals` resumes the flow.
 
-Two questions for the review: *who may call `reviewReferrals`?* It decides whether strangers get text messages from us, so it needs `auth`. And *who looks at batches nobody reviewed?* They stay `waiting` in `pendingReviews` until someone does.
+Two questions for the review: *who may call `reviewReferrals`?* It decides whether strangers get text messages from us. And *who looks at batches nobody reviewed?* They stay `waiting` in `pendingReviews` until someone does.
 
-[Sample: step 17](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/17-flows) · Next: [Part 4: Operate it](./operate-it.md)
+## The catch
+
+Look at what reception actually has to do: read a run ID from a text message, and send a JSON request with it and their name. Nobody at a front desk does that. And `"by": "Grace"` is whatever the caller types; anybody who can reach `/reception/reviewReferrals` can approve a batch as Grace. Reception works in Slack all day. That's where the question should go, and where the answer should come from.
+
+[Sample: step 19](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/19-flows) · Next: [Part 4: Reception works in Slack](./slack.md)

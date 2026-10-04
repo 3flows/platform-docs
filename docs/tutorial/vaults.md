@@ -1,18 +1,33 @@
 ---
-title: 20. Keep secrets in a vault
+title: 23. Keep secrets in a vault
 ---
 
-# 20. Keep secrets in a vault
+# 23. Keep secrets in a vault
 
-**Where we are:** the complete app, with health checks, metrics, an OpenAPI description and an admin API. Every provider is still `memory`.
+**Where we are:** the complete app, with health checks, metrics, an OpenAPI description, an admin API and the runtime manifest. Every provider is still `memory`.
 
-**The problem:** production needs real credentials. SMS goes through Twilio, which needs an account SID and an auth token. The nightly sync from [chapter 14](./sync-from-a-database.md) reads the partner practice's PostgreSQL database, and its connection string contains a password. Where do they go?
+**What we want:** production credentials. SMS goes through Twilio, which needs an account SID and an auth token. The nightly sync from [chapter 16](./sync-from-a-database.md) reads the partner practice's PostgreSQL database, and its connection string contains a password. The Slack connector from [chapter 20](./slack.md) needs a bot token and a signing secret.
 
-Not into `platform.yml`, because it's committed. `${{ TWILIO_AUTH_TOKEN }}` works, but then the secret sits in the process environment. Every child process inherits it, it ends up in crash dumps and `docker inspect`, and it gets copied into every deployment manifest. Nobody can tell who read it, and rotating it means redeploying. Security wants secrets in a vault, such as HashiCorp Vault or Azure Key Vault, and not in the environment.
+## The obvious way
 
-## The solution: `vaults` and `$vault` references
+Not in `platform.yml`, because it's committed. Environment variables, as [chapter 2](./store-appointments.md) did for MongoDB:
 
-This chapter changes YAML only, in two places. The sample checks that every `.ts` file is identical to [chapter 19](./admin-api.md).
+```yaml title="platform.yml"
+smss:
+  - name: DEFAULT
+    type: twilio
+    parameters:
+      accountSid: ${{ TWILIO_ACCOUNT_SID }}
+      authToken: ${{ TWILIO_AUTH_TOKEN }}
+```
+
+## Where it breaks
+
+It works, and security won't sign off on it. A secret in the process environment is inherited by every child process, ends up in crash dumps and `docker inspect`, and gets copied into every deployment manifest and CI variable. Nobody can tell who read it. Rotating it means updating every copy and redeploying. And every process gets every variable it's given, so the process that parses CSV uploads from partners can read the Twilio token too. Security wants secrets in a vault, such as HashiCorp Vault or Azure Key Vault, read by the process that needs them, when it needs them.
+
+## The concept: `vaults` and `$vault` references
+
+This chapter changes YAML only, in two places. The sample checks that every `.ts` file is identical to [chapter 22](./admin-api.md).
 
 **First, say where secrets come from.** In development and tests, the vault is `memory`. Its secrets are in the YAML, and they're fake:
 
@@ -29,6 +44,9 @@ vaults:
       secrets:
         practice-database:
           connectionString: postgres://reader:dev-password@localhost:5432/practice
+        slack-reception:
+          botToken: xoxb-dev-token
+          signingSecret: dev-signing-secret
         twilio:
           accountSid: AC-dev-account
           authToken: dev-auth-token
@@ -60,6 +78,19 @@ smss:
         $vault: { path: twilio, key: authToken }
       from: '+15550009999'
     # highlight-end
+
+connectors:
+  - name: reception
+    # highlight-start
+    type: slack-memory # slack in production; the credentials are already in place
+    useHttp: slack
+    parameters:
+      botToken:
+        $vault: { path: slack-reception, key: botToken }
+      signingSecret:
+        $vault: { path: slack-reception, key: signingSecret }
+    # highlight-end
+    events: # … unchanged
 ```
 
 A `$vault` reference can replace any value in the configuration. At startup, the platform:
@@ -77,10 +108,10 @@ The providers get plain strings. They don't know the values came from a vault, a
 | `name` | no | The vault to read from. Default: `DEFAULT` |
 | `version` | no | A specific version, where the backend keeps versions |
 
-## Run it
+## Run it again
 
 ```sh
-yarn step:20
+yarn step:23
 curl localhost:3000/admin/api/configuration
 ```
 
@@ -116,7 +147,7 @@ A missing secret fails at startup, not at 3 a.m. when the first reminder goes ou
 
 ## Going to production
 
-The `$vault` references stay as they are. Only the `vaults` entry and the provider types change:
+The `$vault` references stay as they are. Only the `vaults` entry and the provider types change. The connector becomes `type: slack` the same way:
 
 ```yaml title="platform.yml (production)"
 vaults:
@@ -199,12 +230,23 @@ const signingKey = await trigger.context.vault().secret('partner-webhooks').key(
 
 ## Reviewer's view
 
-> No code changes. A `vaults` entry, and three `$vault` references: the Twilio account SID and auth token, and the partner database's connection string.
+> No code changes. A `vaults` entry, and five `$vault` references: the Twilio account SID and auth token, the partner database's connection string, and the Slack bot token and signing secret.
 
 The review question is *who may read these secrets?* That isn't in YAML. It's the vault's policy: the HashiCorp role or the Key Vault access policy of this process. Review it together with this change.
 
 :::note
-Secrets are read once, at startup. A rotated secret is picked up on the next restart. `Platform.reload()` with unchanged YAML does nothing.
+Secrets are resolved when the configuration is loaded. To pick up a rotated secret, call `Platform.reload()`: with `$vault` references in the configuration, a reload resolves them again, even if the YAML didn't change, and restarts the services with the new values. If a secret can't be resolved, the previous configuration keeps running. To do that on a schedule:
+
+```yaml
+runtime:
+  configuration:
+    refresh:
+      vaults:
+        enabled: true
+        interval: 15m
+```
+
+A reload restarts the configured services. With `memory` providers, their data is gone afterwards.
 :::
 
-[Sample: step 20](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/20-vaults) · Next: [Part 5: Separate processes](./separate-processes.md)
+[Sample: step 23](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/23-vaults) · Next: [Part 6: Separate processes](./separate-processes.md)

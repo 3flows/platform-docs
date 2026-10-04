@@ -62,7 +62,7 @@ It contains five files and a `yarn.lock`. Here's what they do, so you could also
 - `"type": "module"` is required. The platform is an ES module package.
 - `packageManager` makes Corepack use the same Yarn version for everyone.
 - `next` is the tag of the platform's preview builds, which have everything this tutorial uses. `yarn.lock` pins the exact version, so everyone on the project gets the same build. `yarn up @3flows/platform@next` moves to the newest one.
-- `name` and `version` are what the platform reports in `/ping`, OpenAPI and GraphQL. More on that in [chapter 18](./operate-it.md).
+- `name` and `version` are what the platform reports in `/ping`, OpenAPI and GraphQL. More on that in [chapter 21](./operate-it.md).
 
 ### `.yarnrc.yml`
 

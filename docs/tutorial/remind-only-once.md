@@ -6,11 +6,41 @@ title: 5. Remind only once
 
 **Where we are:** a timer sends reminders for appointments in the next 24 hours.
 
-**The problem:** every timer run reminds the same customers again.
+**What we want:** every customer gets *one* reminder, not one per minute.
 
-## The solution: `kv`
+## The obvious way
 
-We need to remember one small fact per appointment: *has it been reminded?* That's the job of a key-value store.
+Remember who was reminded. A `Set` on the service:
+
+```ts title="services.ts"
+const reminded = new Set<string>();
+
+async function sendDueReminders({ doc, sms }: TriggerContext): Promise<number> {
+    let sent = 0;
+    for (const appointment of /* due appointments */) {
+        if (reminded.has(appointment.id)) continue;
+        await sms().to(appointment.phone).body(/* … */).send();
+        reminded.add(appointment.id);
+        sent++;
+    }
+    return sent;
+}
+```
+
+Call `sendDueReminders` twice: the first call sends one reminder, the second sends none. It works.
+
+## Where it breaks
+
+It's [chapter 2](./store-appointments.md) again, one level down. The `Set` lives in the process:
+
+- **Deploy at 09:00.** The appointments are in MongoDB and survive. The `Set` doesn't. The first timer tick after the deployment reminds **every** customer with an appointment in the next 24 hours, for the second time.
+- **Run two instances.** Each has its own `Set`, so each customer is reminded once per instance.
+
+The fact *"Ada has been reminded"* is data. It needs a home outside the process, just like the appointment.
+
+## The concept: `kv`
+
+It's one small fact per appointment, not a document. That's the job of a key-value store:
 
 ```ts title="services.ts"
 // highlight-next-line
@@ -41,23 +71,24 @@ async function sendDueReminders({ doc, kv, sms, log }: TriggerContext): Promise<
 }
 ```
 
-
 ```yaml title="platform.yml"
 kvs:
   - name: DEFAULT
     type: memory
 ```
 
-A `bracket` groups related keys, like a namespace. For production, `type: redis` or `type: memcached` gives you a shared store without changing code.
+A `bracket` groups related keys, like a namespace. For production, `type: redis` or `type: memcached` gives every instance the same store, and it survives deployments. Same code.
 
-## Run it
+## Run it again
 
 ```sh
 yarn step:05
-# book an appointment as in the previous chapter, then:
+# book an appointment for tomorrow, as in the previous chapter, then:
 curl -X POST localhost:3000/sendDueReminders   # {"sent":1}
 curl -X POST localhost:3000/sendDueReminders   # {"sent":0}
 ```
+
+With `kv` on Redis, a deployment or a second instance changes nothing: the marker is where every instance looks.
 
 ## What you learned
 

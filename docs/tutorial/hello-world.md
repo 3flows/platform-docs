@@ -6,7 +6,7 @@ title: 0. Hello World
 
 **Where we are:** an empty project that starts the platform, from [Set up a project](./setup.md). Or the samples, if you just want to run the steps.
 
-**Goal:** see how little it takes to run a service.
+**Goal:** see how little it takes to run a service. There's no problem to solve yet. Every later chapter starts with one.
 
 ## The code
 
@@ -78,7 +78,7 @@ Every handler is also available through JSON-RPC at `POST /.jsonrpc`, and the pl
 
 - **Code lives in services, and YAML decides what runs.**
 - `@Register()` makes a class available to YAML.
-- Handlers declare their input and output with `t` (Zod) and answer with `trigger.ok(...)`.
+- Handlers declare their input and output with `t` (Zod) and answer with `trigger.ok(...)`. The [next chapter](./book-an-appointment.md) shows why those two schemas matter.
 
 ## Reviewer's view
 

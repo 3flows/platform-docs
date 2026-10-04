@@ -6,11 +6,41 @@ title: 7. A notifications service
 
 **Where we are:** one `AppointmentsService` books appointments, runs reminders, publishes events and sends SMS.
 
-**The problem:** it's doing too much. Notifications are their own responsibility, and later we'll want email, templates and opt-outs. They deserve their own service.
+**What we want:** notifications as a responsibility of their own. Later they'll need email, templates and opt-outs, and they shouldn't be tangled with booking.
 
-## The solution: two services and one call API
+## The obvious way
 
-`NotificationsService` owns everything about SMS:
+Move the SMS code into its own module and import it:
+
+```ts title="notifications.ts"
+export async function sendConfirmation({ sms }: TriggerContext, { name, phone, at }: Appointment) {
+    await sms().to(phone).body(`Hi ${name}, your appointment on ${at} is confirmed.`).send();
+}
+
+export async function sendReminder({ sms }: TriggerContext, { name, phone, at }: Appointment) {
+    await sms().to(phone).body(`Reminder: ${name}, your appointment is on ${at}.`).send();
+}
+```
+
+```ts title="services.ts"
+import { sendConfirmation, sendReminder } from './notifications.js';
+// …
+await sendReminder(trigger.context, appointment);
+```
+
+The code is tidier, and it works.
+
+## Where it breaks
+
+Nothing breaks today. The problem is what you can't do:
+
+- Notifications run **wherever booking runs**. An `import` is a hard wire: you can't deploy or scale notifications on their own, or give only them the SMS credentials, without rewriting every call into an HTTP client with a URL, retries and error handling.
+- There's no boundary. Nothing says which functions are notification's API and which are internals, and nothing validates what goes across.
+- The queue route that sends confirmations still belongs to `AppointmentsService`.
+
+## The concept: services call services by name
+
+`NotificationsService` is a service of its own, with handlers and contracts like any other:
 
 ```ts title="notifications.ts"
 @Register()
@@ -44,7 +74,7 @@ export class NotificationsService extends Service {
 }
 ```
 
-`AppointmentsService` no longer knows anything about SMS. It calls the notifications service by name:
+`AppointmentsService` no longer knows anything about SMS. It calls the notifications service **by name**, and imports nothing from it:
 
 ```ts title="appointments.ts"
 handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
@@ -52,6 +82,7 @@ handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) 
     const appointment: Appointment = { id: randomUUID(), ...input };
 
     await doc().collection('appointments').by(appointment.id).set(appointment);
+    // highlight-next-line
     await service('NotificationsService').method('appointmentBooked').input(appointment).call();
 
     await trigger.ok(appointment);
@@ -64,22 +95,36 @@ and, in the reminder run:
 await service('NotificationsService').method('sendReminder').input(appointment).call();
 ```
 
+The shared schemas, `BookAppointment` and `Appointment`, move into `model.ts`.
+
 ```yaml title="platform.yml"
 services:
   - name: AppointmentsService
+  # highlight-next-line
   - name: NotificationsService
 
 mqs:
   - name: DEFAULT
     type: memory
     use:
+      # highlight-next-line
       - NotificationsService   # the queue routes now belong to notifications
 ```
+
+## Run it
+
+```sh
+yarn step:07
+curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
+  -d '{"name":"Ada","phone":"+15550000001","at":"2030-01-01T10:00:00Z"}'
+```
+
+Ada is confirmed as before. The call goes through `appointmentBooked`'s contract: an appointment without a phone number is refused at the boundary of notifications, not deep inside it.
 
 ## What you learned
 
 - Services call each other with `service(name).method(...).input(...).call()`.
-- **That call doesn't care where the other service runs.** Keep that in mind: [Part 5](./separate-processes.md) comes back to it.
+- **That call doesn't care where the other service runs.** Today it's the same process. In [Part 6](./separate-processes.md), notifications moves to a process of its own, and not a single call site changes.
 
 ## Reviewer's view
 

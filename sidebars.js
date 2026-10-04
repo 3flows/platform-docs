@@ -26,13 +26,15 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: 'Part 2: Model and expose it',
+          label: 'Part 2: Model it and open it up',
           collapsed: false,
           items: [
             'tutorial/entities',
-            'tutorial/ontology',
+            'tutorial/domain',
             'tutorial/graphql',
-            'tutorial/natural-keys'
+            'tutorial/natural-keys',
+            'tutorial/ontology',
+            'tutorial/mcp'
           ]
         },
         {
@@ -50,7 +52,13 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: 'Part 4: Operate it',
+          label: 'Part 4: Connect it',
+          collapsed: false,
+          items: ['tutorial/slack']
+        },
+        {
+          type: 'category',
+          label: 'Part 5: Operate it',
           collapsed: false,
           items: [
             'tutorial/operate-it',
@@ -60,11 +68,12 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: 'Part 5: Scale it',
+          label: 'Part 6: Scale it',
           collapsed: false,
           items: [
             'tutorial/separate-processes',
-            'tutorial/discovery'
+            'tutorial/discovery',
+            'tutorial/workload-identity'
           ]
         },
         'tutorial/whats-next'
@@ -80,6 +89,7 @@ const sidebars = {
         'concepts/services-and-routes',
         'concepts/domain-model',
         'concepts/data-pipelines',
+        'concepts/connectors',
         'concepts/discovery',
         'concepts/ownership',
         'concepts/idempotency'
@@ -109,8 +119,12 @@ const sidebars = {
         'configuration/https',
         'configuration/entities',
         'configuration/graphqls',
+        'configuration/ontologies',
+        'configuration/mcps',
         'configuration/sqls',
         'configuration/vaults',
+        'configuration/connectors',
+        'configuration/identities',
         'configuration/pipelines-and-flows',
         'configuration/admins',
         'configuration/mqs',

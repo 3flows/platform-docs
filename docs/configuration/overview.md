@@ -21,9 +21,17 @@ https:
 |---|---|
 | `services` | Application services |
 | `https` | HTTP servers and exposed service routes |
+| `docs`, `kvs`, `blobs`, `vectors` | Documents, key-value stores, files and vector search |
+| `entities` | Where entities and the entities of `domains` are stored |
 | `graphqls` | GraphQL endpoints |
+| `ontologies` | Domains published as ontologies for people, catalogs and agents |
+| `mcps` | MCP servers for agents: chosen handlers as tools, ontologies as resources |
 | `sqls` | Relational databases, used by services and pipelines |
+| `smss`, `emails` | SMS and email providers |
 | `vaults` | Secret stores. Resolve `$vault` references before anything else starts |
+| `connectors` | External applications, such as Slack: operations, inbound events, retries and dead letters |
+| `identities`, `idps` | Signing workload tokens, and verifying user and workload tokens |
+| `admins` | The admin (control-plane) API |
 | `pipelines` | Data pipelines to start |
 | `flows` | Flows to start, and where their runs are kept |
 | `mqs` | Message queues and topics |
@@ -33,7 +41,9 @@ https:
 | `coordinators` | Distributed leases and ownership |
 | `idempotencies` | Duplicate suppression for async triggers |
 | `remotes` | Static remote service endpoints |
-| `runtime` | Runtime metadata |
+| `runtime` | Runtime metadata: `id`, `identity`, configuration refresh |
+| `instance` | Instance metadata for the manifest: `id`, `name`, `labels` |
+| `modules` | Packages to import before startup, e.g. connector packages |
 | `triggering` | Trigger behavior and strictness defaults |
 
 ## Naming

@@ -14,9 +14,10 @@ All three work with the [domain model](./domain-model.md). Records become valida
 ## Natural keys
 
 ```ts
-ontology('AppointmentsOntology', (o) => {
-    const Customer = o.entity('Customer', { name: o.string(), phone: o.string() }, { key: ['phone'] });
-    o.entity('Appointment', { at: o.string(), customer: o.one(Customer) }, { key: ['customer', 'at'] });
+domain('Scheduling', (d) => {
+    const Customer = d.entity('Customer', { name: d.string(), phone: d.string() }, { key: ['phone'] });
+    const Appointment = d.entity('Appointment', { at: d.string(), customer: d.one(Customer) }, { key: ['customer', 'at'] });
+    return { Customer, Appointment };
 });
 ```
 

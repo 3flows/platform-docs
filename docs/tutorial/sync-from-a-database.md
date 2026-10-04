@@ -1,12 +1,12 @@
 ---
-title: 14. Sync from a database
+title: 16. Sync from a database
 ---
 
-# 14. Sync from a database
+# 16. Sync from a database
 
 **Where we are:** pipelines import CSV uploads and CRM messages.
 
-**The problem:** a partner practice refers patients to us. Their practice software keeps patients in a SQL database, and we are allowed to read one table:
+**What we want:** a partner practice refers patients to us. Their practice software keeps patients in a SQL database, and we are allowed to read one table:
 
 | id | first_name | last_name | mobile | active |
 |---|---|---|---|---|
@@ -16,7 +16,15 @@ title: 14. Sync from a database
 
 Nobody uploads anything and nobody publishes a message. We have to **pull**: every night, and on demand when the practice calls.
 
-## The solution: a SQL source and a timer trigger
+## The obvious way
+
+`npm install pg`, a connection pool, a query, a loop that creates customers, and a cron job, or the timer route from [chapter 4](./send-reminders.md), to run it at night. To avoid re-importing everybody every night, a `lastSyncedAt` timestamp and a `WHERE updated_at > $1`.
+
+## Where it breaks
+
+The driver and the credentials are back in application code, which [chapter 2](./store-appointments.md) got rid of. Tests need a PostgreSQL or a mocked driver. `lastSyncedAt` is state that can be wrong: the partner's clock differs from ours, a row is changed without touching `updated_at`, a sync fails halfway and the timestamp is already written. And we'd be building the third data source with its own mapping, error handling and reporting, next to two pipelines that already have all of that.
+
+## The concept: a SQL source and a timer trigger
 
 ```ts title="pipelines.ts"
 /** A row of the partner practice's `patients` table. */
@@ -75,12 +83,12 @@ In production, `type: postgres` with `parameters.connectionString` points at the
 
 The timer belongs to the pipeline: it starts with the pipeline and stops with it.
 
-## Run it
+## Run it again
 
 The sample seeds the memory database with the three patients above (`seed.ts`).
 
 ```sh
-yarn step:14
+yarn step:16
 curl -X POST localhost:3000/data/syncs/practice
 ```
 
@@ -104,4 +112,4 @@ Now Mary changes her last name in the practice software, and the sync runs again
 
 Worth checking: *is `mobile` in the partner's database in the same format as ours?* If not, normalize it in the mapping, as for the old system.
 
-[Sample: step 14](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/14-sql-sync) · Next: [Dead letters](./dead-letters.md)
+[Sample: step 16](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/16-sql-sync) · Next: [Dead letters](./dead-letters.md)

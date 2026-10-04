@@ -1,6 +1,6 @@
 # `entities`
 
-The `entities` section connects entities to storage. Entities are defined in code, either with `entity(...)` or through an [ontology](../concepts/domain-model.md).
+The `entities` section connects entities to storage. Entities are defined in code, either with `entity(...)` or through a [domain](../concepts/domain-model.md).
 
 ```yaml
 docs:
@@ -10,8 +10,8 @@ docs:
 entities:
   backend: docs
   db: appointments
-  ontologies:
-    - AppointmentsOntology
+  domains:
+    - Scheduling
 ```
 
 ## Fields
@@ -23,7 +23,7 @@ entities:
 | `db` | | Database name |
 | `retries` / `retryDelay` | `0` | Retries for failed backend operations |
 | `entity` | `[]` | Entities defined with `entity(...)` |
-| `ontologies` | `[]` | Ontologies whose entities should be registered |
+| `domains` | `[]` | Domains whose entities should be registered |
 
 ## Per-entity options
 

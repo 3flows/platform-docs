@@ -1,12 +1,12 @@
 ---
-title: 12. Transformers
+title: 14. Transformers
 ---
 
-# 12. Transformers
+# 14. Transformers
 
-**Where we are:** the app from Part 2: an ontology with natural keys and a generated GraphQL API. Creating the same customer twice updates it. So far, every record was typed in by a person. Part 3 is about data that arrives from other systems.
+**Where we are:** the app from Part 2: a domain with natural keys and meaning, GraphQL, and an MCP server. So far, every record was typed in by a person or an assistant. Part 3 is about data that arrives from other systems.
 
-**The problem:** the practice used an old booking system before. It can export its appointments as CSV, and those appointments should get reminders too:
+**What we want:** the practice used an old booking system before. It can export its appointments as CSV, and those appointments should get reminders too:
 
 ```text title="legacy.csv"
 Name;Mobile;Date;Notes
@@ -15,9 +15,36 @@ Grace Hopper;+1 555 000 0002;2030-01-16 09:30;
 No Phone;;2030-01-17 11:00;
 ```
 
-The columns don't match our model, phone numbers contain spaces, dates are in a different format, and some rows are broken. And the analytics team wants the opposite direction: *all appointments as a CSV file.*
+And the analytics team wants the opposite direction: *all appointments as a CSV file.*
 
-## The solution: transformers
+## The obvious way
+
+A handler that takes the file as text, splits it into lines and columns, and creates entities:
+
+```ts
+handler('importAppointments', t.object({ csv: t.string() }), t.object({ imported: t.number() }), async ({ csv }, trigger) => {
+    const [, ...lines] = csv.trim().split('\n');
+    for (const line of lines) {
+        const [name, mobile, date] = line.split(';');
+        const customer = await Customers.create({ name, phone: mobile });
+        await Appointments.create({ at: new Date(date).toISOString(), customer: customer.reference() });
+    }
+    await trigger.ok({ imported: lines.length });
+});
+```
+
+Ada and Grace are imported.
+
+## Where it breaks
+
+- **Ada is there twice.** The old system writes `+1 555 000 0001`, we write `+15550000001`. To the natural key from [chapter 11](./natural-keys.md), those are two different customers.
+- **Row 3 throws** (no phone), and the handler stops. Rows 1 and 2 are imported, everything after row 3 isn't, and the response is an error that doesn't say which row, or why.
+- `new Date('2030-01-15 10:00')` is read in the server's time zone. On a laptop in Berlin and a server in UTC, the same file gives different appointments.
+- `split(';')` breaks on the first quoted value with a `;` in it. The whole file is in memory, as a JSON string. And the export needs the same care in the other direction: quoting, escaping, resolving each appointment's customer.
+
+None of this is about our business. It's the same plumbing every import needs, and it's easy to get subtly wrong.
+
+## The concept: transformers
 
 A transformer is a Node.js stream that turns one kind of record into another. The platform ships the ones a data hub needs:
 
@@ -137,10 +164,10 @@ https:
       # highlight-end
 ```
 
-## Run it
+## Run it again
 
 ```sh
-yarn step:12
+yarn step:14
 curl -X POST localhost:3000/data/importAppointments -H 'Content-Type: application/json' \
   -d '{"csv":"Name;Mobile;Date;Notes\nAda Lovelace;+1 555 000 0001;2030-01-15 10:00;first visit\nGrace Hopper;+1 555 000 0002;2030-01-16 09:30;\nNo Phone;;2030-01-17 11:00;\n"}'
 ```
@@ -195,7 +222,7 @@ Transformers are ordinary Node.js `Transform` streams. They work with files, HTT
 
 - **Mapping is data.** The mapping from an external format to the model is one small, readable declaration.
 - **Transformers stream.** Records flow through one at a time, so the file size doesn't matter.
-- Natural keys make the import safe to repeat: the same file twice creates nothing new.
+- Natural keys make the import safe to repeat: the same file twice creates nothing new. Normalized phone numbers make Ada one customer, whether she booked or was imported.
 
 ## Reviewer's view
 
@@ -203,4 +230,4 @@ Transformers are ordinary Node.js `Transform` streams. They work with files, HTT
 
 The mapping is the part to review closely. Everything else is plumbing.
 
-[Sample: step 12](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/12-transformers) · Next: [Pipelines](./pipelines.md)
+[Sample: step 14](https://github.com/3flows/platform-samples/tree/main/appointment-reminders/steps/14-transformers) · Next: [Pipelines](./pipelines.md)

@@ -4,13 +4,59 @@ title: 6. Don't block booking
 
 # 6. Don't block booking
 
-**Where we are:** booking stores the appointment and sends the confirmation SMS in the same request.
+**Where we are:** booking stores the appointment and then sends the confirmation SMS, in the same request.
 
-**The problem:** SMS providers can be slow or temporarily unavailable. Then booking becomes slow, or fails even though the appointment could be stored. The customer shouldn't wait for the SMS provider.
+**What we want:** booking that doesn't depend on the SMS provider.
 
-## The solution: `mq`
+## Where it breaks already
 
-Booking publishes an event and answers right away. The SMS call moves out of the handler into a queue route.
+You don't need a slow provider to see it. Book with an empty phone number. It's a string, so the contract lets it through, but the SMS provider can't deliver it:
+
+```sh
+yarn step:05
+curl -i -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
+  -d '{"name":"Bob","phone":"","at":"2030-01-01T10:00:00Z"}'
+```
+
+```txt
+HTTP/1.1 500 Internal Server Error
+{ "title": "Internal Server Error", "detail": "Cannot deliver memory SMS without recipient address", … }
+```
+
+Now list the appointments: **Bob's is there.** The booking worked, but the caller was told it failed, so it will probably try again and book twice. A slow provider is the same problem in slow motion: every booking waits for it, and when it times out, the customer sees an error for an appointment that exists.
+
+## The obvious way
+
+The customer shouldn't wait for the SMS. So don't wait: drop the `await`.
+
+```ts title="services.ts"
+await doc().collection('appointments').by(appointment.id).set(appointment);
+
+// Don't wait for the SMS provider.
+sms().to(appointment.phone).body(`Hi ${appointment.name}, …`).send();
+
+await trigger.ok(appointment);
+```
+
+Book Ada: the answer comes right away, and the SMS follows.
+
+## Where it breaks
+
+Book Bob with his empty phone number again:
+
+```sh
+curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
+  -d '{"name":"Bob","phone":"","at":"2030-01-01T10:00:00Z"}'
+# {"name":"Bob","phone":"",…}
+curl localhost:3000/health
+# curl: (7) Failed to connect to localhost port 3000
+```
+
+Bob gets `200`, and then **the whole server is gone.** The failed `send()` is a promise nobody waits for. Its rejection is unhandled, and Node.js ends the process on unhandled rejections. One bad SMS took down booking for everyone. Wrapping it in `.catch()` keeps the server up, but then the confirmation is silently lost, and a restart in the middle loses every SMS that was still in flight.
+
+## The concept: `mq`
+
+Booking publishes an event and answers. The SMS moves out of the request into a **queue route**, which the platform runs and whose errors it owns:
 
 ```ts title="services.ts"
 handler('bookAppointment', BookAppointment, Appointment, async (input, trigger) => {
@@ -45,12 +91,32 @@ mqs:
       - AppointmentsService
 ```
 
-`use` attaches the service's queue routes to this message queue. In production, `type: rabbitmq` or `type: azure` (Service Bus) gives you a durable broker with retries. Same code.
+`use` attaches the service's queue routes to this message queue.
+
+## Run it again
+
+```sh
+yarn step:06
+curl -X POST localhost:3000/bookAppointment -H 'Content-Type: application/json' \
+  -d '{"name":"Bob","phone":"","at":"2030-01-01T10:00:00Z"}'
+# {"name":"Bob","phone":"",…}
+curl localhost:3000/health
+# OK
+```
+
+Booking answers `200` without waiting, and the server stays up. Book Ada, and her confirmation arrives as before.
+
+What happens to Bob's message depends on the broker, and that's the point: it's the queue's problem now, not the booking request's. With `type: rabbitmq` or `type: azure` (Service Bus), a message whose route fails is redelivered, and survives a restart of your process. Same code.
+
+:::caution
+The `memory` queue is for development. A message whose route fails is simply dropped, without a log line. Don't rely on it to show you failures. [Dead letters](./dead-letters.md) in Part 3 and the [Slack connector](./slack.md) in Part 4 show how the platform keeps failed records instead.
+:::
 
 ## What you learned
 
-- **Async work is just another route.** Publishing is one line, and consuming is a route.
+- **Async work is just another route.** Publishing is one line, consuming is a route.
 - HTTP handlers, timer routes and queue routes all look the same.
+- Never "fire and forget" a promise in a service. A queue is the way to not wait.
 
 ## Reviewer's view
 

@@ -55,3 +55,7 @@ The same code now calls `PaymentsService` over JSON-RPC. The remote platform mus
 Use registries and discovery when remote locations shouldn't be wired statically into every consumer. See [Distributed platform](./distributed-platform.md).
 
 The [tutorial chapter on separate processes](../tutorial/separate-processes.md) shows a complete, runnable example.
+
+## Securing calls between processes
+
+Calls to another process carry a signed workload token when the caller has a `runtime.identity` and the callee requires an audience, through `remotes[].identity.audience` or its registry registration. The callee verifies the token with an `idps` entry and `auths` on its `https` service. Application code doesn't change. See [`identities` and `idps`](../configuration/identities.md) and the tutorial chapter [Workload identity](../tutorial/workload-identity.md).
