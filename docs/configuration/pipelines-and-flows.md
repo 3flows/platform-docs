@@ -36,7 +36,7 @@ mqs:
       - CrmCustomersPipeline
 ```
 
-Timer triggers declared with `.on.timer(cron)` start and stop with the pipeline or flow. They don't need a `timers` entry.
+Timer triggers declared with `.on.timer(cron)` start and stop with the pipeline or flow. They don't need a `timers` entry, and they use the same ownership defaults as YAML timers.
 
 ## `pipelines`
 
@@ -56,8 +56,26 @@ Timer triggers declared with `.on.timer(cron)` start and stop with the pipeline 
 
 A flow can override where its runs are written with `.state().doc().db(...).collection(...)`. Resuming always reads from `flows.state`, so flows that wait should use it. Without any state, a flow still runs and reports, but it can't be resumed after a wait.
 
-Resume a waiting flow from any service with the `flows` service:
+Resume a waiting flow from any service with the `flows` service. Prefer the owning runtime or trigger context in application code:
 
 ```ts
-await Platform.get<Flows>('flows').resume({ event: 'referrals.reviewed', correlation: runId, payload: { accepted: true } });
+await trigger.context.platform().get<Flows>('flows').resume({
+  event: 'referrals.reviewed',
+  correlation: runId,
+  payload: { accepted: true }
+});
 ```
+
+## Runtime events and cancellation
+
+Flows can report lifecycle events while they run:
+
+```ts
+const report = await ReferralFlow.run(input, {
+  onEvent: (event) => log.info(event)
+});
+```
+
+Event delivery is best-effort by default. Use strict event delivery when monitoring/audit code must be part of the run outcome. Flow runs also accept `AbortSignal` cancellation; cancelled runs report a `FlowCancelledError`, including the abort reason when one is provided.
+
+Flow variables are persisted into `FlowReport.variables` and restored across wait/resume state, so long-running flows can carry explicit state without hiding it in ad-hoc documents.

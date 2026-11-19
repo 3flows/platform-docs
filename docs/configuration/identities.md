@@ -86,7 +86,7 @@ Other `idps` providers (`openid`, `entra`, `keycloak`, `auth0`, `okta`, …) ver
 | Field | Description |
 |---|---|
 | `idp` | The `idps` entry |
-| `identifies` | `service` for workloads, `user` for people |
+| `identifies` | `service` for workloads, `user` for people. `api` is rejected because API-token principals are not implemented yet |
 | `audience` | Accepted audiences |
 
 Requests without a valid token get `401`. Built-in endpoints such as `/health` stay open. In handlers, `trigger.context.identity.workload` and `trigger.context.identity.subject` describe the caller.

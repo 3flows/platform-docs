@@ -82,6 +82,12 @@ const sidebars = {
     'why',
     {
       type: 'category',
+      label: 'Release notes',
+      collapsed: false,
+      items: ['release/whats-new-0.9', 'release/migration-0.8-to-0.9']
+    },
+    {
+      type: 'category',
       label: 'Core Concepts',
       collapsed: true,
       items: [

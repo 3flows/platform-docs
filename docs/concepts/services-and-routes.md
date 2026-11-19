@@ -41,9 +41,7 @@ The errors are `InputValidationError` and `OutputValidationError`, both `Platfor
 
 The same schemas describe the handler everywhere: in `/openapi.json`, in `rpc.schema`, in GraphQL, as MCP tool input schemas, and in the runtime manifest. `t` is [Zod](https://zod.dev).
 
-:::note
-For handlers exposed through GraphQL, use plain Zod types: `t.string().datetime()` works, Zod 4 format types such as `t.iso.datetime()` don't yet.
-:::
+GraphQL schema generation supports the current Zod 4 schema shape and preserves field and type descriptions where GraphQL can represent them.
 
 ## Routes
 
@@ -71,7 +69,7 @@ Every handler and route receives a `Trigger`. Use `trigger.context` to reach inf
 const { doc, kv, blob, mq, sms, email, sql, vault, log, service, connector } = trigger.context;
 ```
 
-Using the trigger context, rather than `this` or global lookups, keeps handlers independent of the service instance and easy to test.
+Using the trigger context, rather than global lookups, keeps handlers tied to the runtime that owns the triggering service and easy to test. Inside service methods, use `this.platform()` for the same reason.
 
 Source-specific data is also available, for example `trigger.context.mqContext?.message` for queue routes. `trigger.context.identity` says who called: the user, or, for calls between processes, the calling workload. See [`identities`](../configuration/identities.md).
 

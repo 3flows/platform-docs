@@ -38,10 +38,14 @@ An MCP server needs at least one service, resource or ontology.
 | Field | Description |
 |---|---|
 | `name` | The service |
-| `handlers` | Handler names, or `{ handler, name, description }`. Without `handlers`, **every** handler becomes a tool |
+| `handlers` | Handler names, or `{ handler, name, description }`. Without `handlers`, metadata-marked tools are exposed when present; otherwise every handler becomes a tool |
 | `resolve` | `true` for a service that doesn't run in this process. Calls go through `remotes` or `discovery`; `handlers` must be listed |
 
 Tool names default to `<Service>_<handler>`. The tool's input schema is the handler's input contract, and its description is the handler's description unless set here. Tool names must be unique.
+
+### Handler metadata
+
+Packages can attach model-facing metadata to handlers with `attachHandlerMetadata`. MCP uses that metadata for default tool names, descriptions, schema overrides and safety annotations such as read-only/destructive hints. If at least one handler in a service has tool metadata and `handlers` is omitted, MCP exposes only metadata-marked handlers whose metadata does not set `expose: false`.
 
 ### `ontologies[]`
 
@@ -66,5 +70,9 @@ With more than one ontology, the tool names are prefixed with the ontology's nam
 `POST <path>` speaks JSON-RPC 2.0 with `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read` and `notifications/initialized`. `GET <path>` lists tools and resources. Clients that connect over HTTP, such as the [MCP Inspector](https://github.com/modelcontextprotocol/inspector), work with the URL directly.
 
 Tool errors are returned as `isError: true` with a safe message (`Tool call failed: invalid input`), without internals.
+
+:::caution
+An MCP endpoint without `auth` logs a startup warning. With `triggering.strict: true`, startup fails for unauthenticated MCP surfaces. Add `auth` before exposing MCP outside a trusted development environment.
+:::
 
 See the tutorial chapter [An assistant through MCP](../tutorial/mcp.md) for a runnable example.

@@ -63,11 +63,12 @@ const manifest = Platform.inspect();
 | Part | Contains |
 |---|---|
 | `runtime` | Running, generation (reloads), number of services |
-| `instance` | ID, name, application version, start time, labels |
+| `instance` | ID, name, application version, platform version, start time, labels |
 | `configuration` | Name, source file, a hash of the loaded configuration, its sections |
 | `services` | Every service with status, dependencies and its **handlers with input and output schemas** |
 | `providers` | Every infrastructure provider: `doc::memory::default`, `sms::memory::default`, … |
 | `connectors` | Every connector with its inbound endpoint, queue, retry and dead-letter policy, events and health |
+| `timers` | Timer active state, last run, last error and failure counts |
 | `domains` | Domains with their entities, fields and relationships |
 
 ## Run it

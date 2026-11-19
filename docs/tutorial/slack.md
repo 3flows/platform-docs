@@ -168,6 +168,10 @@ https:
   # Slack's side of the app: the connector's inbound events and, with slack-memory, its outbox and inject.
   - name: slack
     port: 3002
+    services:
+      # Connector operations are ordinary handlers. Expose slack-memory's test helpers on this dev server.
+      - name: reception
+        basepath: /
   # highlight-end
 
 mqs:
@@ -196,8 +200,8 @@ connectors:
 
 `slack-memory` has the same operations, events and schemas as `slack`, without a workspace. Messages go to an outbox you can read, and you play Slack by injecting events. Switching to the real thing is `type: slack` and two credentials.
 
-:::caution
-Give the connector an `https` server of its own, as here. `useHttp` currently mounts **all** of the connector's routes on that server, not only `/connectors/reception/events`: also its JSON-RPC endpoint and its operations, such as `/messages.send`, without authentication. Next to services at the root of a server, startup fails with `POST /.jsonrpc … already in use`. In production, expose only the events path to Slack, for example with an ingress rule.
+:::note
+`useHttp` mounts only the inbound event endpoint (`/connectors/reception/events`). The `services` entry above exposes `slack-memory`'s development helpers (`/outbox` and `/inject`) on the same dev server. In production you usually omit that service exposure and publish only the event endpoint to Slack.
 :::
 
 ## Run it again
@@ -284,7 +288,7 @@ Platform.inspect().connectors[0].health;
 | Part | What it does |
 |---|---|
 | `connectors[]` | `name`, `type` (`slack`, `slack-memory`, …), `parameters` (credentials, as `$vault` references), `useHttp` and `path` for inbound events |
-| Operations | Handlers of the connector service. Call them with the package's helper, `trigger.context.connector(name).call(method, input)`, or `service(name)` |
+| Operations | Handlers of the connector service. Call them with the package's helper, `trigger.context.connector(name).call(method, input)`, or `service(name)`. Expose them over HTTP only with an explicit `https[].services` entry |
 | Events | `route.connector(name).event(type).do(fn)`. Delivered through the queue `connectors.<name>.events`, or `events.queue`. The service needs an `mqs[].use` entry |
 | Intake | `POST /connectors/<name>/events`: signature check, handshake, parse, duplicate check, enqueue, `200` |
 | Duplicates | Events are claimed by provider event ID in the `idempotencies` store, for `events.idempotency.ttlSeconds` (default one day) |

@@ -62,11 +62,12 @@ Handlers reach infrastructure through `trigger.context` (`doc()`, `kv()`, `mq()`
 ```ts
 const manifest = Platform.inspect();
 
-manifest.instance;      // id, name, application version, start time, labels
+manifest.instance;      // id, name, applicationVersion, platformVersion, start time, labels
 manifest.configuration; // source file, hash of the loaded configuration, sections
 manifest.services;      // every service: status, dependencies, handlers with input and output JSON Schemas
 manifest.providers;     // every infrastructure provider, e.g. doc::memory::default
 manifest.connectors;    // connectors with inbound endpoint, policies, events and health
+manifest.timers;        // active timers, last run, last error and failure counts
 manifest.domains;       // domains with entities, fields and relationships
 ```
 

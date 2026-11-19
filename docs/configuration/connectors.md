@@ -37,8 +37,8 @@ modules:
 | `name` | `DEFAULT` | Connector name, used by `connector(name)`, `service(name)`, `route.connector(name)` and the manifest |
 | `type` | | Provider type, e.g. `slack` or `slack-memory`. Required. An unregistered type fails at startup |
 | `parameters` | `{}` | Provider settings and credentials. Use `$vault` references for credentials |
-| `useHttp` | | `https` server for inbound events. Without it, the connector receives no events over HTTP |
-| `path` | `/connectors/<name>/events` | Path of the inbound endpoint |
+| `useHttp` | | `https` server for inbound events. Without it, the connector receives no events over HTTP. It does **not** expose connector operations |
+| `path` | `/connectors/<name>/events` | Path of the inbound intake endpoint |
 | `events.queue` | `connectors.<name>.events` | Queue that inbound events are delivered through |
 | `events.idempotency.store` | `DEFAULT` | `idempotencies` store for duplicate events. Without an `idempotencies` section, duplicates aren't dropped by the intake |
 | `events.idempotency.ttlSeconds` / `ttlMs` | one day | How long an event ID is remembered |
@@ -79,10 +79,24 @@ Services with `route.connector(...)` routes need an `mqs[].use` entry, because e
 
 Operations: `messages.send`, `reactions.add`, `reactions.remove`, `files.upload`, `files.download`. Events: `message.created`, `app.mentioned`, `reaction.added`, `reaction.removed`, `file.shared`, `file.created`.
 
-## Known limitations
+## Exposing operations over HTTP
 
-:::caution
-`useHttp` mounts **all** of the connector's routes on that server: its JSON-RPC endpoint and every operation (e.g. `/messages.send`, and `/inject` for memory types), without `auth`, not only the events path. Give the connector an `https` server of its own, and expose only `/connectors/<name>/events` to the provider. A connector on a server that also has a service at its root fails at startup with `POST /.jsonrpc … already in use`.
-:::
+`useHttp` exposes only the connector intake path. Connector operations are service handlers. Call them from code with the provider helper, `trigger.context.connector(name).call(method, input)`, or through `service(name)`. If a development tool or test needs HTTP access to operations such as `outbox` or `inject`, expose the connector service explicitly:
+
+```yaml
+https:
+  - name: slack-dev
+    port: 3002
+    services:
+      - name: reception
+        basepath: /
+
+connectors:
+  - name: reception
+    type: slack-memory
+    useHttp: slack-dev
+```
+
+For production, expose connector operations only when you intentionally want them as public HTTP handlers and protect them with the same `https.services[].auths` you use for any other service.
 
 See the tutorial chapter [Reception works in Slack](../tutorial/slack.md) for a runnable example.
