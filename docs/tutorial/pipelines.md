@@ -97,6 +97,10 @@ mqs:
       - NotificationsService
       # highlight-next-line
       - CrmCustomersPipeline
+    routes:
+      confirmations:
+        retry: { attempts: 3, backoffMs: 200 }
+        dlq: { queue: confirmations.failed }
 ```
 
 ## Run it again

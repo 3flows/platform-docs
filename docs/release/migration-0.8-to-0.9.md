@@ -1,221 +1,300 @@
 ---
 title: Migrate from 0.8 to 0.9
-sidebar_label: Migrate 0.8 → 0.9
+sidebar_label: Migrate from 0.8
 ---
 
-# Migrate from Platform 0.8 to 0.9
+# Migrate from 0.8 to 0.9
 
-This guide focuses on app-level changes you should review when moving an existing Platform 0.8 application to 0.9.
+Most of 0.9 is new and waits until you use it. A 0.8 application has to change in five places, and only the first one is always more than a rename:
 
-## 1. Upgrade and run the manifest/tests first
+| Step | What | Who is affected |
+|---|---|---|
+| [1](#step-1-upgrade) | Upgrade | Everyone |
+| [2](#step-2-replace-mbs) | Replace `mbs` with `smss`, `emails`, `webhooks` and `mqs` | Applications that send or receive SMS, email or webhooks |
+| [3](#step-3-rename-the-types) | Rename the types of `docs`, `kvs`, `blobs` and `mqs` | Code that names these types |
+| [4](#step-4-make-the-handlers-keep-their-contracts) | Make the handlers keep their contracts | Everyone with handlers |
+| [5](#step-5-decide-what-happens-to-failed-messages) | Decide what happens to failed messages | Applications with queue routes |
+| [6](#step-6-check-the-small-things) | Check the small things | Have a look |
 
-Upgrade the package and run your existing tests:
+Go through the steps in this order. After each one, the application compiles and its tests can run, so you always know which step broke something.
+
+Everything else works as before: services, `handlers`, `routes()`, `Platform.run()` and `Platform.shutdown()`, the calls on `doc()`, `kv()`, `blob()`, `vector()` and `mq()`, entities, your own GraphQL resolvers, `https`, `idps`, `timers`, policies and transformers.
+
+## Before you start
+
+- Be on the latest 0.8 with green tests. They're how you'll know that a step is done.
+- Use Node.js 24 or later.
+- Read [What's new in 0.9](./whats-new-0.9.md), so you know what the changes are for.
+
+## Step 1: Upgrade
+
+0.9 is published under the `next` tag until it's released:
 
 ```sh
-yarn up @3flows/platform@^0.9.0
-# or, while the prerelease line is used:
 yarn up @3flows/platform@next
-yarn test
+yarn build
 ```
 
-Then start the app and inspect the runtime:
-
-```ts
-const manifest = Platform.inspect();
-console.log(manifest.instance.applicationVersion, manifest.instance.platformVersion);
-console.log(manifest.services.map((service) => service.serviceName));
-```
-
-The manifest is the quickest way to see what 0.9 actually started: services, handler contracts, providers, connector health, timer state, domains and exposed agent surfaces.
-
-## 2. Replace direct static service-registry access
-
-0.9 introduces runtime instances through `Platform.create()` and removes public direct access to the mutable static service registry.
-
-Prefer runtime-owned access inside services and handlers:
-
-```ts
-// Good inside a service
-const notifications = this.platform().get('NotificationsService');
-
-// Good inside a handler/route
-const notifications = trigger.context.service('NotificationsService');
-```
-
-For inspection-style code, use registry accessors instead of `Platform.services`:
-
-```ts
-Platform.listServices();
-Platform.serviceEntries();
-Platform.serviceValues();
-Platform.serviceIds();
-Platform.serviceCount();
-```
-
-The static `Platform` API remains a compatibility facade, but new runtime-sensitive code should use the owning runtime (`this.platform()`, `trigger.context`, or a `PlatformRuntime` returned by `Platform.create()`).
-
-## 3. Check handler contracts
-
-0.9 enforces both sides of every handler contract.
-
-- The handler receives parsed input, not raw unvalidated JSON.
-- Invalid input returns HTTP `400` / JSON-RPC `INVALID_INPUT`.
-- `trigger.ok(...)` validates the output schema.
-- Invalid output is treated as a platform error and is not returned to the caller.
-
-Migration checklist:
-
-1. Make each handler input schema match what clients really send.
-2. Make each output schema match exactly what `trigger.ok(...)` returns.
-3. If a handler previously returned data directly, update it to call `trigger.ok(...)`.
-4. Update tests that expected a generic `500` or custom validation shape for bad input.
-
-## 4. Expose connector operations explicitly
-
-This is the most important connector behavior change.
-
-In 0.8-style connector setups, `connectors[].useHttp` exposed more than inbound events. In 0.9 it mounts only the inbound connector intake route:
-
-```yaml
-connectors:
-  - name: reception
-    type: slack
-    useHttp: slack
-```
-
-That gives the provider this endpoint only:
+**Where it breaks.** The build fails wherever the code uses `mb()`, `route.mb()`, `MBMessage`, `Platform.services`, or the type names of step 3. And an application that still has an `mbs` section doesn't start:
 
 ```txt
-POST /connectors/reception/events
+ReferenceError: mbs is not defined
 ```
 
-Connector operations (`messages.send`, `outbox`, `inject`, and so on) are ordinary service handlers. If you need them over HTTP, expose the connector service explicitly:
+Every section of the YAML is started by a service of the same name, and `mbs` doesn't have one anymore. The next two steps fix both.
 
-```yaml
-https:
-  - name: slack-dev
-    port: 3002
+## Step 2: Replace `mbs`
+
+0.8 had one message broker, `mbs`, with a `transport` for each kind of message. In 0.9, every kind is a primitive of its own, with its own section, its own fluent API and its own routes:
+
+| 0.8 | 0.9 section | Types | In code | Routes |
+|---|---|---|---|---|
+| `transport: sms` | `smss` | `twilio`, `memory` | `sms()` | `route.sms()` |
+| `transport: email` | `emails` | `standard`, `gmail`, `microsoft`, `memory` | `email()` | `route.email()` |
+| `transport: http` | `webhooks` | `http` | `webhook()` | `route.webhook()` |
+| `transport: mq` | `mqs` | `memory`, `rabbitmq`, `azure` | `mq()` | `route.mq()` |
+
+### The YAML
+
+`transport` and `type` become the section and its `type`. `services` and `parameters` stay as they are:
+
+```yaml title="0.8"
+mbs:
+  - name: texts
+    transport: sms
+    type: twilio
     services:
-      - name: reception
-        basepath: /
-
-connectors:
-  - name: reception
-    type: slack-memory
-    useHttp: slack-dev
+      - name: AppointmentsService
+    parameters:
+      accountSid: ${{ TWILIO_ACCOUNT_SID }}
+      authToken: ${{ TWILIO_AUTH_TOKEN }}
+      from: '+15550009999'
 ```
 
-For production, usually expose only the intake path to the external provider. Call connector operations from application code through the connector helper or service client instead of opening them publicly.
+```yaml title="0.9"
+smss:
+  - name: DEFAULT
+    type: twilio
+    services:
+      - name: AppointmentsService
+    parameters:
+      accountSid: ${{ TWILIO_ACCOUNT_SID }}
+      authToken: ${{ TWILIO_AUTH_TOKEN }}
+      from: '+15550009999'
+```
 
-## 5. Configure async retry and dead letters intentionally
+In 0.8, two entries in `mbs` needed two names. Now each section has its own `DEFAULT`, so `sms()` and `email()` work without a name.
 
-Non-response trigger failures now propagate to the delivery system instead of disappearing.
+### Sending
 
-For MQ routes, add route-level policy when a failure should retry or land in a DLQ:
+```ts title="0.8"
+await this.mb('texts').transport().to(phone).body(`Hi ${name}, your appointment is confirmed.`).send();
+```
+
+```ts title="0.9"
+await trigger.context.sms().to(phone).body(`Hi ${name}, your appointment is confirmed.`).send();
+```
+
+| | 0.9 |
+|---|---|
+| SMS | `sms().to(number).body(text).send()` |
+| Email | `email().to(address).subject(subject).text(body).send()`, or `.html(body)`, `.json(body)` |
+| Webhook | `webhook().to(url).path(path).json(body).send()`. The path was the `subject` in 0.8 |
+| Queue | `mq().queue(name).send(body)`, as before |
+
+### Receiving
+
+`route.mb().for({ to, subject })` becomes a route of the primitive, with criteria that fit it:
+
+```ts title="0.8"
+route.mb('texts').for({ to: '+15550009999' }).do(async (message, trigger) => {
+    const from = trigger.context.mbContext?.message?.from?.address;
+});
+route.mb('texts').all().do(/* … */);
+```
+
+```ts title="0.9"
+route.sms().to('+15550009999').do(async (message, trigger) => {
+    const from = trigger.context.smsContext?.message?.from?.address;
+});
+route.sms().any().do(/* … */);
+```
+
+| | Criteria | Message in the trigger context |
+|---|---|---|
+| `route.sms()` | `.from(…)`, `.to(…)`, `.anyFrom()`, `.anyTo()`, `.any()` | `smsContext.message`: an `SMSMessage` |
+| `route.email()` | `.to(…)`, `.subject(…)`, `.anyTo()`, `.anySubject()`, `.any()` | `emailContext.message`: an `EmailMessage` |
+| `route.webhook()` | `.to(…)`, `.path(…)`, `.anyTo()`, `.anyPath()`, `.any()` | `webhookContext.message`: a `WebhookMessage` |
+
+Criteria accept `*` as a wildcard: `route.sms().from('+1555*')`.
+
+`MBMessage` becomes `SMSMessage`, `EmailMessage` or `WebhookMessage`, and `TriggerType.MB` becomes `TriggerType.SMS`, `EMAIL` or `WEBHOOK`.
+
+### Check
+
+The build no longer mentions `mb`, and the application starts. This is also the moment to stop testing against real accounts. Give the tests a YAML with `type: memory`, and they send and receive without Twilio or a mailbox. [Chapter 3](../tutorial/confirm-by-sms.md) of the tutorial shows how.
+
+## Step 3: Rename the types
+
+The fluent calls on `doc()`, `kv()`, `blob()` and `mq()` are the same. The classes behind them have new names, which matters where your code names them, for example as a parameter type:
+
+| 0.8 | 0.9 |
+|---|---|
+| `Collection` | `CollectionChain` |
+| `Document` | `DocumentChain` |
+| `Cursor`, `AggregationCursor` | `CursorChain`, `AggregationChain` |
+| `Bracket`, `Pair` | `BracketChain`, `PairChain` |
+| `Container`, `File` | `ContainerChain`, `FileTerminator` |
+| `Queue`, `Topic` | `QueueChain`, `TopicChain` |
+| `MQ`, as returned by `mq()` | `MQChain` |
+| `S3Configuration`, `S3Parameters` | `S3BlobConfiguration`, `S3BlobParameters` |
+
+Two things the compiler doesn't tell you clearly:
+
+- **`Document` still exists, but it's something else**: a document of a vector store. Code that imports `Document` for a `docs` document compiles until it uses it. Search for the import.
+- `Platform.get<MQ>(…)` returns the provider, not the fluent API. Use `this.mq()` or `trigger.context.mq()`, or call `.chain()` on the provider.
+
+`Platform.services`, the map of all services, is gone. Use `Platform.listServices()`, `serviceIds()`, `serviceEntries()` or `serviceCount()`, or, better, [`Platform.inspect()`](../concepts/platform-runtime.md#inspecting-a-running-platform).
+
+### Check
+
+`yarn build` succeeds.
+
+## Step 4: Make the handlers keep their contracts
+
+From here on, everything compiles, and what's left is behavior. Run the tests now. The failures you see most likely come from this step.
+
+In 0.8, the input schema of a handler was checked, but the handler got the request as it came, and nothing checked the answer. In 0.9, both schemas are enforced:
+
+| | 0.8 | 0.9 |
+|---|---|---|
+| The `input` of the handler function | The request as sent | The **parsed** input: defaults filled in, fields that the schema doesn't declare removed |
+| Invalid input over HTTP | `500 Internal Server Error` | `400` with `title: INVALID_INPUT` |
+| Invalid input over JSON-RPC | `error.code: "Error"` | `error.code: "INVALID_INPUT"`, with the issues in `error.data` |
+| `trigger.ok(value)` | Sent as it is | Checked against the output schema. A mismatch is `500` with `title: INVALID_OUTPUT`, and nothing is sent |
+| A JSON-RPC result without a value | No `result` member | `"result": null` |
+
+**Where it breaks.** Three cases, in the order you'll probably meet them:
+
+1. **A handler reads a field that its schema doesn't declare.** It was there in 0.8, and it's `undefined` now:
+
+   ```ts
+   const Book = t.object({ name: t.string(), at: t.string() });
+
+   handler('book', Book, Appointment, async (input, trigger) => {
+       input.phone; // 0.8: whatever the client sent. 0.9: undefined, and a type error
+   });
+   ```
+
+   Declare the field. If the handler really takes anything, say so with `t.any()` or `t.looseObject({ … })`.
+
+2. **A handler answers something else than its output schema says**, often an internal field too many, or a missing ID. In 0.8 nobody noticed. Fix the schema or the answer, whichever is wrong.
+
+3. **A client or a test expects the old errors**: a `500` for bad input, or the JSON-RPC code `Error`.
+
+Routes that are plain functions, such as `route.http().get('/appointments/:id').do(fn)`, have no schemas and aren't affected.
+
+### Check
+
+The tests pass again, and `/openapi.json` shows what the handlers really accept and answer.
+
+## Step 5: Decide what happens to failed messages
+
+In 0.8, an error in a queue, SMS, email, webhook or timer route was written to the console, and that was it: the message counted as handled. In 0.9, the error is thrown to whatever delivered the message.
+
+**Where it breaks.** A route that has always failed now and then starts to have consequences:
+
+| `mqs` type | A queue route that throws, without a policy |
+|---|---|
+| `rabbitmq` | The message is rejected. It goes to the queue's dead-letter exchange, if it has one |
+| `azure` | The message is abandoned and delivered again, up to the queue's maximum delivery count |
+| `memory` | `send()` rejects with the route's error, because the memory queue delivers inside `send()`. A test that publishes a message can now fail because of its consumer |
+
+Decide per queue what should happen, in YAML:
 
 ```yaml
 mqs:
   - name: DEFAULT
-    type: memory
+    type: rabbitmq
     use:
       - NotificationsService
     routes:
-      reminders:
-        retry:
-          attempts: 3
-          backoffMs: 1000
-        dlq:
-          queue: reminders.failed
+      confirmations:
+        retry: { attempts: 3, backoffMs: 1000 }
+        dlq: { queue: confirmations.failed }
 ```
 
-For connector events, configure policy under the connector:
+With `dlq`, a message that failed every attempt is sent to that queue with its error, and the delivery counts as done. Give the dead-letter queue a route that keeps what arrives, as in [chapter 6](../tutorial/dont-block-booking.md). See [`mqs`](../configuration/mqs.md#retry-and-dead-letters).
 
-```yaml
-connectors:
-  - name: reception
-    type: slack
-    useHttp: slack
-    events:
-      idempotency:
-        ttlSeconds: 86400
-      retry:
-        attempts: 3
-        backoffMs: 1000
-      dlq:
-        queue: reception.failed
+SMS, email and webhook routes have no such policy. For them, and wherever a failure really doesn't matter, handle the error in the route, where a reviewer sees it:
+
+```ts
+route.mq().queue('metrics').do(record).error((trigger, error) => {
+    trigger.context.log().stack(error).warn();
+});
 ```
 
-If a 0.8 route relied on failures being logged and ignored, add an explicit route error handler or DLQ policy.
+Timer routes need nothing. A failing run is logged, counted in `platform_timer_failures_total` and shown in `Platform.inspect().timers`, and the next run happens as scheduled.
 
-## 6. Review timers and ownership
+### Check
 
-Timer handlers are awaited now. Failed runs are logged, counted and shown in `Platform.inspect().timers` rather than becoming unhandled process-level failures.
+Make a route fail on purpose in a test, and check that the dead-letter route got the message.
 
-If you run more than one instance, review timer ownership:
+## Step 6: Check the small things
 
-```yaml
-coordinators:
-  - name: DEFAULT
-    type: memory # use a distributed coordinator in real multi-process deployments
+| | 0.8 | 0.9 | Do |
+|---|---|---|---|
+| `identifies: api` in `auths` | Accepted | Startup fails: `Unsupported auth identifies api for …` | Use `service` or `user` |
+| `https[].security.sessionSecret` | Had a built-in default | No default | Nothing, unless you relied on the default |
+| HTTP routes and `basepath` | A route could match a path outside its service's `basepath` | It can't | Check clients that call such paths |
+| WebSocket routes | Ignored `basepath` and `auths` | Live under the service's `basepath`, and require its `auths` | Connect to the right path, with a token |
+| A route that throws in the HTTP dispatcher | Could end as `404` | `500` | Check clients that treat `404` as "not there" |
+| `/ping`, OpenAPI, `version` | A constant | The `version` of the application's `package.json` | Set it |
+| CSV with `headerNames` | The first data row was dropped | Every row is data | For a file with a header row, add `useFirstRowAsHeader: true` |
+| CSV and SAX row splitting | The line ending of the host | `\n` | Set `eol` for files with other line endings |
+| `${{ NAME }}` | Needed an `env` section | Also reads the process environment directly | Nothing |
 
-timers:
-  - service: AppointmentsService
-    name: reminders
-    cron: '0 * * * * *'
-    ownership:
-      mode: singleton
-      coordinator: DEFAULT
-      ttlMs: 10000
+## You're done
+
+Check it the way [chapter 22](../tutorial/admin-api.md) does:
+
+```ts
+const manifest = Platform.inspect();
+
+manifest.instance.platformVersion;   // 0.9.x
+manifest.services;                   // your services and their contracts
+manifest.providers;                  // sms::twilio::default, email::standard::default, …
 ```
 
-When a `DEFAULT` coordinator exists, timers without explicit ownership default to singleton behavior. Without a coordinator, they run locally in every instance and warn unless strict triggering is enabled.
+## What to adopt next
 
-## 7. Add auth to MCP and ontology surfaces
+Nothing here is required. Pick what removes code you have today:
 
-Open MCP and ontology surfaces now warn at startup. If `triggering.strict: true` is enabled, open surfaces fail startup.
+| If your 0.8 application has… | Use | Tutorial |
+|---|---|---|
+| Tests that need a Twilio account or a mailbox | `type: memory` for `smss` and `emails` | [3](../tutorial/confirm-by-sms.md) |
+| HTTP clients for your own services | `service(name)` and `remotes` | [7](../tutorial/notifications-service.md), [24](../tutorial/separate-processes.md) |
+| Find-or-create code against duplicates | A domain with natural keys | [9](../tutorial/domain.md), [11](../tutorial/natural-keys.md) |
+| GraphQL resolvers for entities | `graphqls` with `domains` | [10](../tutorial/graphql.md) |
+| Handlers that parse files and loop over records | Pipelines and dead letters | [15](../tutorial/pipelines.md), [17](../tutorial/dead-letters.md) |
+| A SQL client and a cron job | `sqls` and a pipeline with a timer trigger | [16](../tutorial/sync-from-a-database.md) |
+| Status fields and "check again later" handlers | Flows | [19](../tutorial/flows.md) |
+| A webhook route for Slack | A connector | [20](../tutorial/slack.md) |
+| Passwords in environment variables | `vaults` and `$vault` | [23](../tutorial/vaults.md) |
+| The same timer firing in every instance | A coordinator and singleton timers | [Guide](../guides/singleton-timers.md) |
+| Shared API keys between your services | Workload identity | [26](../tutorial/workload-identity.md) |
+| An AI assistant that should use the application | `mcps` | [13](../tutorial/mcp.md) |
 
-Add auth where these surfaces are reachable outside trusted development environments:
+## Coming from a 0.9 prerelease
 
-```yaml
-mcps:
-  - name: assistant
-    useHttp: api
-    path: /mcp
-    auth:
-      idp: DEFAULT
-      identifies: user
-      audience: [assistant]
-```
+If you already run a `0.9.0-next` build, these changed along the way:
 
-Use `identifies: user` for people and `identifies: service` for workload-to-workload calls. `identifies: api` is rejected in 0.9 because API-token principals are not implemented yet.
-
-## 8. Review HTTP, WebSocket and version assumptions
-
-- HTTP service basepaths are matched strictly; routes should not depend on paths outside their configured `basepath`.
-- WebSocket routes now follow HTTP/service auth behavior and receive identity context.
-- The manifest splits versions: `applicationVersion` is your app package version and `platformVersion` is the `@3flows/platform` package version.
-- `/ping`, OpenAPI and the optional `version` endpoint continue to report the application version when one is available.
-
-## 9. Review data parsing edge cases
-
-0.9 fixes several parser/compiler edge cases that may change tests that encoded old bugs:
-
-- `CSVTransformer` with explicit `headerNames` now applies them to every row. To skip and rename an existing header row, set both `headerNames` and `useFirstRowAsHeader: true`.
-- CSV/record-CSV/SAX splitting defaults to LF instead of the host OS line ending.
-- SQL `notIn([])`, `$notIn` and `$nin` semantics are now consistent across memory, SQLite, Postgres and MariaDB.
-- JSON-RPC empty handler results serialize as `result: null`.
-- GraphQL input/output enum names are separated so matching enum fields do not collide.
-
-## 10. Optional: adopt the new 0.9 capabilities
-
-After the app is running, consider adopting the new 0.9 features deliberately:
-
-- replace static `Platform.start()` tests with isolated `Platform.create()` runtimes where useful,
-- expose a read-only admin API for operations,
-- use connector idempotency/retry/DLQ instead of ad-hoc event handling,
-- move long-running business processes into flows,
-- publish domains through GraphQL, ontology and MCP,
-- use workload identity for service-to-service calls,
-- add vault-backed configuration for credentials.
-
-For a tour of the features, see [What's new in 0.9](./whats-new-0.9.md).
+| Since | Change | Do |
+|---|---|---|
+| `next.14` | Contracts are enforced, as in [step 4](#step-4-make-the-handlers-keep-their-contracts). `Platform.services` is gone | Step 4 |
+| `next.21` | Routes that throw fail the delivery, as in [step 5](#step-5-decide-what-happens-to-failed-messages) | Step 5 |
+| `next.21` | A connector's `useHttp` mounts only its event intake, `/connectors/<name>/events`. Its operations are no longer on that server | Expose the connector as a service where you called its operations over HTTP, as the samples do for `slack-memory`'s `outbox` and `inject`. See [`connectors`](../configuration/connectors.md#exposing-operations-over-http) |
+| `next.21` | `Platform.inspect().instance.platformVersion` is the platform's version. Your application's is `applicationVersion` | Check tests and dashboards that read it |
+| After `next.21` | An MCP service without `handlers` exposes only the handlers that are marked as tools, if it has any | List `handlers` where you relied on "all" |
+| After `next.21` | GraphQL input enums have type names of their own | Check queries that name these types |
+| After `next.21` | Pipeline and flow timers follow the same ownership as `timers`: singleton, when there's a `DEFAULT` coordinator | Nothing |

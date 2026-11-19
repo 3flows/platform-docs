@@ -182,6 +182,10 @@ mqs:
       - CrmCustomersPipeline
       # highlight-next-line
       - ReceptionService # Slack events are delivered to its connector routes through a queue
+    routes:
+      confirmations:
+        retry: { attempts: 3, backoffMs: 200 }
+        dlq: { queue: confirmations.failed }
 
 # highlight-start
 # Reception's Slack workspace. Operations are handlers, events are routes. slack-memory needs no workspace.

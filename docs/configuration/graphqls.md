@@ -51,6 +51,8 @@ graphqls:
 
 Restrict operations per entity with `entities[].operations`: `get`, `find`, `count`, `create`, `update`, `delete`.
 
-Handler schemas must use GraphQL-representable shapes. Primitive Zod 4 string/number/boolean/object/array/enum schemas are supported, including current Zod 4 internal format definitions where they still represent strings. Unsupported custom schemas fall back to JSON or fail with `Unsupported Zod type` depending on the position.
+Handler schemas become GraphQL types: strings, numbers, booleans, enums, arrays and objects, including Zod 4 format types such as `t.iso.datetime()`, which become `String`. `t.any()` becomes a `JSON` scalar. Any other schema fails at startup with `Unsupported Zod type`.
+
+A `.describe()` on a handler's output object becomes the description of its GraphQL type. Descriptions of individual fields, and the `.describe()` texts of a domain, aren't part of the GraphQL schema. They're published by [`ontologies`](./ontologies.md).
 
 See the tutorial chapter [GraphQL](../tutorial/graphql.md) for a runnable example.

@@ -39,9 +39,9 @@ A handler's input and output schemas are **contracts**, and the platform enforce
 
 The errors are `InputValidationError` and `OutputValidationError`, both `PlatformError`s with a `code`, a `status` and `details`.
 
-The same schemas describe the handler everywhere: in `/openapi.json`, in `rpc.schema`, in GraphQL, as MCP tool input schemas, and in the runtime manifest. `t` is [Zod](https://zod.dev).
+The handler receives the **parsed** input: defaults are filled in, and fields that the schema doesn't declare are gone. A handler that needs a field has to declare it.
 
-GraphQL schema generation supports the current Zod 4 schema shape and preserves field and type descriptions where GraphQL can represent them.
+The same schemas describe the handler everywhere: in `/openapi.json`, in `rpc.schema`, in GraphQL, as MCP tool input schemas, and in the runtime manifest. `t` is [Zod](https://zod.dev).
 
 ## Routes
 
@@ -69,9 +69,21 @@ Every handler and route receives a `Trigger`. Use `trigger.context` to reach inf
 const { doc, kv, blob, mq, sms, email, sql, vault, log, service, connector } = trigger.context;
 ```
 
-Using the trigger context, rather than global lookups, keeps handlers tied to the runtime that owns the triggering service and easy to test. Inside service methods, use `this.platform()` for the same reason.
+Using the trigger context, rather than `this` or global lookups, keeps handlers independent of the service instance and easy to test. It also resolves everything through the runtime that owns the service, which matters as soon as a process has [more than one](./platform-runtime.md).
 
 Source-specific data is also available, for example `trigger.context.mqContext?.message` for queue routes. `trigger.context.identity` says who called: the user, or, for calls between processes, the calling workload. See [`identities`](../configuration/identities.md).
+
+## When a route fails
+
+A handler answers its caller, so its errors become the answer: `400`, `500`, a JSON-RPC error. Queue, timer, SMS, email, webhook and connector routes have no caller to answer. Their errors are **thrown to whatever delivered the trigger**, which is what makes retries, redelivery and dead letters possible:
+
+| Route | A route that throws |
+|---|---|
+| Queue | Retried and dead-lettered as configured in [`mqs[].routes`](../configuration/mqs.md). Without a policy, the error is logged and the broker gets the message back |
+| Connector event | Retried and dead-lettered as configured in [`connectors[].events`](../configuration/connectors.md) |
+| Timer | Logged, counted in `platform_timer_failures_total` and shown in `Platform.inspect().timers`. The next run happens as scheduled |
+
+`route.…do(fn).error((trigger, error) => …)` handles an error in the route itself. An error that's handled there isn't thrown.
 
 ## Queue and connector routes
 

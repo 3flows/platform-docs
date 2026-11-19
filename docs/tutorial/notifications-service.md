@@ -69,6 +69,8 @@ export class NotificationsService extends Service {
             const { name, phone, at } = appointment as Appointment;
             await trigger.context.sms().to(phone).body(`Hi ${name}, your appointment on ${at} is confirmed.`).send();
         });
+        // The dead-letter route moved along with the queue: 'confirmations.failed'.
+        route.mq().queue('confirmations.failed').do(async (failure, trigger) => { /* as before */ });
         return route;
     }
 }
@@ -109,6 +111,12 @@ mqs:
     use:
       # highlight-next-line
       - NotificationsService   # the queue routes now belong to notifications
+    routes:
+      # highlight-next-line
+      confirmations:           # the queue got a name that says what's in it
+        retry: { attempts: 3, backoffMs: 200 }
+        # highlight-next-line
+        dlq: { queue: confirmations.failed }
 ```
 
 ## Run it

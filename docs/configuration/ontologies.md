@@ -47,14 +47,18 @@ Relative to `path`, here `/ontology`:
 
 Intents are `read`, `search`, `create`, `update`, `delete`, `invoke` and `workflow`. Capabilities that change data are marked with side effects; deletes are marked destructive; both require confirmation.
 
-## Search and security
+## Search
 
-Ontology search and concept resolution use names, aliases, descriptions, domain context, fields and relationships. Concept cards include descriptions, field descriptions and relationship labels/descriptions when the domain provides them.
+`{ "select": "concepts", "q": … }` and the `ontology_search` tool match names, labels, aliases, descriptions, domains, fields and relationships. `"q": "patient"` finds `Customer` when the domain says `.alias('patient')`.
+
+## Authentication
 
 :::caution
-An ontology endpoint without `auth` logs a startup warning. With `triggering.strict: true`, startup fails for unauthenticated ontology surfaces. Add `auth` before exposing ontology endpoints outside a trusted development environment.
+An ontology without `auth` is public, and the platform says so at startup: `Ontology scheduling has no auth configured; ontology endpoints are public`. Add `auth` before the endpoints are reachable from outside a trusted network. With `triggering.strict: true`, an ontology without `auth` fails startup instead.
 :::
 
-Descriptions are preserved in ontology output and in generated GraphQL fields where GraphQL can represent them.
+## Limitations
+
+- The descriptions of a domain aren't part of the GraphQL schema. They're published here and through [`mcps`](./mcps.md).
 
 See the tutorial chapter [Ontology](../tutorial/ontology.md) for a runnable example, and [`mcps`](./mcps.md) to give agents the ontology as MCP resources and tools.

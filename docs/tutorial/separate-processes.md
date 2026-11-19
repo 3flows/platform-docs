@@ -78,6 +78,10 @@ mqs:
     type: memory
     use:
       - NotificationsService
+    routes:
+      confirmations:
+        retry: { attempts: 3, backoffMs: 200 }
+        dlq: { queue: confirmations.failed }
 ```
 
 **Appointments process:** everything else. It no longer runs notifications, and gets a `remotes` entry instead. Compared to the last chapter's `platform.yml`:

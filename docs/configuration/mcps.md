@@ -45,7 +45,16 @@ Tool names default to `<Service>_<handler>`. The tool's input schema is the hand
 
 ### Handler metadata
 
-Packages can attach model-facing metadata to handlers with `attachHandlerMetadata`. MCP uses that metadata for default tool names, descriptions, schema overrides and safety annotations such as read-only/destructive hints. If at least one handler in a service has tool metadata and `handlers` is omitted, MCP exposes only metadata-marked handlers whose metadata does not set `expose: false`.
+A package can mark handlers as tools in code, with `attachHandlerMetadata(handler, { tool: { … } })`: a tool name, a description, schemas, and hints such as `readOnly`, `destructive` and `requiresConfirmation`. The MCP server uses them as defaults; what's written under `handlers` in YAML wins.
+
+For a service **without** `handlers` in YAML:
+
+| The service has | Tools |
+|---|---|
+| Handlers marked as tools | Only the marked ones, except those with `expose: false` |
+| No marked handlers | Every handler |
+
+Listing `handlers` is still the way to say exactly what an agent may call.
 
 ### `ontologies[]`
 
@@ -72,7 +81,7 @@ With more than one ontology, the tool names are prefixed with the ontology's nam
 Tool errors are returned as `isError: true` with a safe message (`Tool call failed: invalid input`), without internals.
 
 :::caution
-An MCP endpoint without `auth` logs a startup warning. With `triggering.strict: true`, startup fails for unauthenticated MCP surfaces. Add `auth` before exposing MCP outside a trusted development environment.
+An MCP server without `auth` is public, and the platform says so at startup: `MCP reception-assistant has no auth configured; exposed tools and resources are public`. Add `auth` before the endpoint is reachable from outside a trusted network. With `triggering.strict: true`, an MCP server without `auth` fails startup instead.
 :::
 
 See the tutorial chapter [An assistant through MCP](../tutorial/mcp.md) for a runnable example.

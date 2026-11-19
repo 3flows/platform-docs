@@ -56,26 +56,47 @@ Timer triggers declared with `.on.timer(cron)` start and stop with the pipeline 
 
 A flow can override where its runs are written with `.state().doc().db(...).collection(...)`. Resuming always reads from `flows.state`, so flows that wait should use it. Without any state, a flow still runs and reports, but it can't be resumed after a wait.
 
-Resume a waiting flow from any service with the `flows` service. Prefer the owning runtime or trigger context in application code:
+Resume a waiting flow from any service with the `flows` service:
 
 ```ts
-await trigger.context.platform().get<Flows>('flows').resume({
-  event: 'referrals.reviewed',
-  correlation: runId,
-  payload: { accepted: true }
-});
+await Platform.get<Flows>('flows').resume({ event: 'referrals.reviewed', correlation: runId, payload: { accepted: true } });
 ```
 
-## Runtime events and cancellation
+In a process with more than one runtime, `trigger.context.platform().get<Flows>('flows')` reaches the `flows` service of the runtime that owns the handler.
 
-Flows can report lifecycle events while they run:
+## Steps
+
+Every step of a flow accepts the same modifiers:
+
+| Modifier | Effect |
+|---|---|
+| `.retry({ attempts, backoffMs })` | Runs a failing step again |
+| `.skipWhen(predicate, reason?)` | Skips the step when the predicate is true. The report shows it as `skipped`, with the reason |
+| `.recover((error, ctx) => value)` | Runs when the step has failed for good. Its result becomes the step's result, and the flow goes on |
+| `.metadata({ … })` | Free-form data that is copied into the step's report |
+
+`.when(name, predicate)` … `.otherwise()` … `.end()` branches. Steps of the branch that wasn't taken are reported as `skipped`.
+
+`ctx.variables` is a place for values that later steps need. It's part of the report (`report.variables`) and is restored when a waiting flow resumes.
+
+## Running a flow from code
+
+A flow normally starts from its trigger. Code that holds the flow can run it directly, watch it, and cancel it:
 
 ```ts
-const report = await ReferralFlow.run(input, {
-  onEvent: (event) => log.info(event)
-});
+const flow = Platform.get<ReferralFlow>('ReferralFlow');
+const controller = new AbortController();
+
+const report = await flow.run(
+    { input: batch, signal: controller.signal },
+    { onEvent: (event) => console.log(event.type) }
+);
 ```
 
-Event delivery is best-effort by default. Use strict event delivery when monitoring/audit code must be part of the run outcome. Flow runs also accept `AbortSignal` cancellation; cancelled runs report a `FlowCancelledError`, including the abort reason when one is provided.
+| Part | Description |
+|---|---|
+| `onEvent` | Called with `flow.started`, `step.started`, `step.succeeded`, `step.failed`, `step.skipped`, `step.recovered`, `flow.waiting`, `flow.succeeded`, `flow.failed` and `flow.cancelled`. Every event carries the report so far |
+| `eventFailureMode` | `best-effort` (default): an `onEvent` that throws doesn't affect the run. `strict`: it fails the run |
+| `signal` | Aborting it cancels the run. `run` rejects with a `FlowCancelledError` whose `report` has the status `cancelled` and the signal's reason in `cancelledReason` |
 
-Flow variables are persisted into `FlowReport.variables` and restored across wait/resume state, so long-running flows can carry explicit state without hiding it in ad-hoc documents.
+`Flows.resume(input, options)` accepts the same options.

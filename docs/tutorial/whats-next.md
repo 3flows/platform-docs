@@ -34,6 +34,7 @@ Until then, the [guides](../guides/distributed-platform.md) already describe the
 
 ## Learn more
 
+- [What's new in 0.9](../release/whats-new-0.9.md), and [migrating from 0.8](../release/migration-0.8-to-0.9.md)
 - [Why 3flows Platform](../why.md)
 - [Core concepts](../concepts/platform-runtime.md)
 - [Domains, ontologies, GraphQL and MCP](../concepts/domain-model.md)
