@@ -69,6 +69,8 @@ Add the Slack connector to the project:
 yarn add @3flows/platform-connector-slack@next
 ```
 
+The connector package is still in preview, so it comes from its `next` tag. It works with the released platform.
+
 **Ask in Slack.** `ReceptionService` gets a handler that posts the question. The package's `slack` helper calls the connector's `messages.send` operation:
 
 ```ts title="reception.ts"

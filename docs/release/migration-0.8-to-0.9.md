@@ -28,12 +28,12 @@ Everything else works as before: services, `handlers`, `routes()`, `Platform.run
 
 ## Step 1: Upgrade
 
-0.9 is published under the `next` tag until it's released:
-
 ```sh
-yarn up @3flows/platform@next
+yarn up @3flows/platform@^0.9.0
 yarn build
 ```
+
+Applications that depend on `^0.8.x` don't move to 0.9 on their own: for a 0.x version, a caret range stays inside the minor version.
 
 **Where it breaks.** The build fails wherever the code uses `mb()`, `route.mb()`, `MBMessage`, `Platform.services`, or the type names of step 3. And an application that still has an `mbs` section doesn't start:
 
@@ -287,7 +287,7 @@ Nothing here is required. Pick what removes code you have today:
 
 ## Coming from a 0.9 prerelease
 
-If you already run a `0.9.0-next` build, these changed along the way:
+If you already run a `0.9.0-next` build, switch the dependency from `next` to `^0.9.0`; the `next` tag now carries preview builds of the version after 0.9.0. These changed along the way:
 
 | Since | Change | Do |
 |---|---|---|

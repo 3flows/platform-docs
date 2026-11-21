@@ -9,6 +9,10 @@ sidebar_label: What's new in 0.9
 
 0.9 moves those into the platform, too. The [tutorial](../tutorial/index.md) is the best way to see it: it builds one application in 27 small steps, and 17 of them are built on something that didn't exist in 0.8. This page follows the same path.
 
+```sh
+yarn add @3flows/platform@^0.9.0
+```
+
 Upgrading an application? The [migration guide](./migration-0.8-to-0.9.md) lists what you have to change.
 
 ## The short version
@@ -232,4 +236,5 @@ Every chapter of the tutorial has a tested [sample step](https://github.com/3flo
 - The descriptions of a domain reach the ontology and MCP, but not the GraphQL schema.
 - Resuming a flow goes through the `flows` service: `Platform.get<Flows>('flows').resume(…)`.
 - Discovery resolves a service to one registered instance. It doesn't balance load.
+- A queue message that ends in a dead-letter queue isn't logged by the platform. Give every dead-letter queue a route that logs and keeps what arrives, as in [chapter 6](../tutorial/dont-block-booking.md).
 - `$vault` references are resolved when the configuration loads. A rotated secret reaches a provider with the next reload, or with a scheduled refresh.

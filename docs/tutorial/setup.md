@@ -50,7 +50,7 @@ It contains five files and a `yarn.lock`. Here's what they do, so you could also
     "test": "yarn build && node --test dist/*.test.js"
   },
   "dependencies": {
-    "@3flows/platform": "next"
+    "@3flows/platform": "^0.9.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
@@ -61,7 +61,7 @@ It contains five files and a `yarn.lock`. Here's what they do, so you could also
 
 - `"type": "module"` is required. The platform is an ES module package.
 - `packageManager` makes Corepack use the same Yarn version for everyone.
-- `next` is the tag of the platform's preview builds, which have everything this tutorial uses. `yarn.lock` pins the exact version, so everyone on the project gets the same build. `yarn up @3flows/platform@next` moves to the newest one.
+- `^0.9.0` is the released 0.9 line, which has everything this tutorial uses. `yarn.lock` pins the exact version, so everyone on the project gets the same build. `yarn up @3flows/platform` moves to the newest 0.9 release. Preview builds of the next version are published under the `next` tag.
 - `name` and `version` are what the platform reports in `/ping`, OpenAPI and GraphQL. More on that in [chapter 21](./operate-it.md).
 
 ### `.yarnrc.yml`
@@ -77,7 +77,7 @@ npmScopes:
     npmAlwaysAuth: true
     npmAuthToken: "${NPM_REPOSITORY_GH_TOKEN:-}"
 
-# Yarn holds back package versions younger than a day. Our own packages are exempt, so fresh `next` builds install.
+# Yarn holds back package versions younger than a day. Our own packages are exempt, so fresh builds install.
 npmPreapprovedPackages:
   - "@3flows/*"
 ```
@@ -173,6 +173,6 @@ To try an unreleased change of the platform in your project, link a local checko
 }
 ```
 
-Run `yarn build` in the platform after every change. The `portal:` link follows the checkout, so your project uses the new build right away. Switch back to `"next"` before you commit.
+Run `yarn build` in the platform after every change. The `portal:` link follows the checkout, so your project uses the new build right away. Switch back to `"^0.9.0"` before you commit.
 
 Next: [Hello World](./hello-world.md)
