@@ -66,7 +66,7 @@ A **connector** connects the platform to an external application. It comes in a 
 Add the Slack connector to the project:
 
 ```sh
-yarn add @3flows/platform-connector-slack@next
+yarn add @3flows/connectors-slack@next
 ```
 
 The connector package is still in preview, so it comes from its `next` tag. It works with the released platform.
@@ -75,7 +75,7 @@ The connector package is still in preview, so it comes from its `next` tag. It w
 
 ```ts title="reception.ts"
 import { ConnectorEvent, Flows, Platform, Register, Route, Service, handler, t } from '@3flows/platform';
-import { SlackReactionEvent, slack } from '@3flows/platform-connector-slack';
+import { SlackReactionEvent, slack } from '@3flows/connectors-slack';
 
 /** The Slack channel reception works in. In a real deployment, this would come from configuration. */
 export const RECEPTION_CHANNEL = 'C0RECEPTION';

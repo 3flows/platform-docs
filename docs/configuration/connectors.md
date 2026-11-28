@@ -27,7 +27,7 @@ The provider's package must be loaded, by importing it in code or with `modules`
 
 ```yaml
 modules:
-  - '@3flows/platform-connector-slack'
+  - '@3flows/connectors-slack'
 ```
 
 ## Fields
@@ -63,7 +63,7 @@ Services with `route.connector(...)` routes need an `mqs[].use` entry, because e
 
 ## Slack
 
-`@3flows/platform-connector-slack` registers:
+`@3flows/connectors-slack` registers:
 
 | Type | Use it for |
 |---|---|

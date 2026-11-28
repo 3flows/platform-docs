@@ -9,11 +9,11 @@ A connector connects the platform to an external business application: Slack, an
 | **A connector is a service** | Its name is the connector's `name` in YAML. It runs in the platform like any service and shows up in the manifest |
 | **Operations are handlers** | `messages.send`, `reactions.add`, … with input and output contracts. Called through the provider's helper, `trigger.context.connector(name).call(method, input)` or `service(name)`, also from other processes |
 | **Events are routes** | `route.connector(name).event(type).do(fn)`. Events arrive through a queue, so a slow route never delays the provider |
-| **Providers are packages** | `@3flows/platform-connector-slack` registers `slack` and `slack-memory`. A connector type that isn't registered fails at startup |
+| **Providers are packages** | `@3flows/connectors-slack` registers `slack` and `slack-memory`. A connector type that isn't registered fails at startup |
 | **Every provider has a memory type** | Same operations, events and schemas, with an outbox to read and an `inject` operation to play the provider |
 
 ```ts
-import { slack } from '@3flows/platform-connector-slack';
+import { slack } from '@3flows/connectors-slack';
 
 // an operation
 await slack(trigger.context).connector('reception').channel('C0RECEPTION').message('Hello').send();

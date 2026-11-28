@@ -98,5 +98,5 @@ Packages that register providers, such as connector packages, can be loaded from
 
 ```yaml
 modules:
-  - '@3flows/platform-connector-slack'
+  - '@3flows/connectors-slack'
 ```

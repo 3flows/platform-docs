@@ -200,7 +200,7 @@ Every chapter of the tutorial has a tested [sample step](https://github.com/3flo
 
 | Chapter | In 0.9 |
 |---|---|
-| [20. Reception works in Slack](../tutorial/slack.md) | **New.** `connectors`, with `@3flows/platform-connector-slack` as the first provider |
+| [20. Reception works in Slack](../tutorial/slack.md) | **New.** `connectors`, with `@3flows/connectors-slack` as the first provider |
 
 ### Part 5: Operate it
 
